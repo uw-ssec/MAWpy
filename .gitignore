@@ -1,0 +1,4 @@
+# Ignore input, output, and temporary CSV files
+input_file.csv
+output_file.csv
+outputfile_tmp.csv
