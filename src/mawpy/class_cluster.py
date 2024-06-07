@@ -1,13 +1,11 @@
+"""
+data structure of a cluster
+"""
 
-'''
-    data structure of a cluster
-'''
-
-import sys
 import numpy as np
 
 
-#sys.path.append("E:\\ProgramData\\python\\cuebiq_share_git")
+# sys.path.append("E:\\ProgramData\\python\\cuebiq_share_git")
 from distance import distance
 
 
@@ -19,7 +17,7 @@ class cluster:
         self.radius = 0
 
     def addPoint(self, point):
-        self.pList.append((float(point[0]),float(point[1])))
+        self.pList.append((float(point[0]), float(point[1])))
 
     def updateCenter(self):
         self.center[0] = np.mean([p[0] for p in self.pList])
