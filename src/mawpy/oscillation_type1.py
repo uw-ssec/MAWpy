@@ -1,5 +1,5 @@
 ##9/11/2021 diagnosis
-# 1. If a pair of traces appears multiple times in a trajectory, and one of them is identified as oscillation, then all occurances of this pair will be "corrected" (even if other occurances are not osscilation).
+# 1. If a pair of traces appears multiple times in a trajectory, and one of them is identified as oscillation, then all occurrences of this pair will be "corrected" (even if other occurrences are not osscilation).
 # 2. Only stay locations are corercted. Traces with oscillations are not dealt with.
 # 3. Oscilation is required to bound back to the exact same location.
 # 4. Line 115 should also consider trace locations (i.e. adding a trace to a stay)
@@ -51,7 +51,7 @@ def oscillation_h1_oscill(user, dur_constr):
             )  # trace[7] is stay_long and long is assigned the same as actual long i.e trace[4] if stay_long is -1 i.e. a longitude corresponding to a stay point
             rad = (
                 trace[5] if int(trace[8]) == -1 else trace[8]
-            )  # trace[8] is stay_unc and rad is assigned the same as actual uncertainity i.e trace[5] if stay_unc is -1
+            )  # trace[8] is stay_unc and rad is assigned the same as actual uncertainty i.e trace[5] if stay_unc is -1
             stay_not = (
                 0 if float(trace[6]) == -1 else 1
             )  # trace[6] is stay_lat and if it is -1 the stay_not = 0 which means it is not a stay point
@@ -160,7 +160,7 @@ def oscillation_h1_oscill(user, dur_constr):
     ) in oscillation_pairs:  # go through each nested list captured in oscillation pairs
         stay_indicators = [
             tracelist[x][-1] for x in pair
-        ]  # for a given nested list, it will go to each index in this nested list, retreive the element at that index and get the saty_not variable
+        ]  # for a given nested list, it will go to each index in this nested list, retrieve the element at that index and get the saty_not variable
         if 1 in stay_indicators:  # if one of the indices correspond to a stay point
             replacing = sorted(
                 pair, key=lambda x: gps_dur_count[(tracelist[x][3], tracelist[x][4])]
@@ -196,12 +196,12 @@ def oscillation_h1_oscill(user, dur_constr):
                     trace[3], trace[4] = (
                         candidate_trace[3],
                         candidate_trace[4],
-                    )  # else update the origninal lat and long
+                    )  # else update the original lat and long
             ind += 1
 
     return user  # return updated traces
 
 
 # deel trace list without checking diff in time stamp
-# tarce[0] taken or not say logic
-# time ans apace complexity
+# trace[0] taken or not say logic
+# time and apace complexity

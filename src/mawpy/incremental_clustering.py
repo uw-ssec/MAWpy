@@ -245,7 +245,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
             a_stay[i][7] = str(new_long)
         stays_output.append(a_stay)
 
-    ##Convert stays into a disctionary
+    ##Convert stays into a dictionary
     dict_output = {}
     for a_stay in stays_output:
         for a_record in a_stay:

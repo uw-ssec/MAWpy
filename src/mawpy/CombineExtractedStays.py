@@ -100,9 +100,9 @@ def combineGPSandPhoneStops(arg):
         for i in range(len(user[d])):
             if (
                 int(user[d][i][5]) > spat_cell_split and int(user[d][i][9]) < dur_constr
-            ):  # passing phone observ
+            ):  # passing phone observe
                 user[d][i].append("checked")
-        # combine consecutive obsv on a phone stay into two observ
+        # combine consecutive obsv on a phone stay into two observe
         i = min(phone_index)  # i has to be a phone index
         j = i + 1
         while i < len(user[d]) - 1:
@@ -137,7 +137,7 @@ def combineGPSandPhoneStops(arg):
                 del user[d][i]
             else:
                 i += 1
-        # adress phone stay one by one
+        # address phone stay one by one
         flag_changed = True
         phone_list_check = []
         while flag_changed:
@@ -188,14 +188,14 @@ def combineGPSandPhoneStops(arg):
             if len(phone_list) == 1:
                 phone_list[0][9] = -1
 
-            # update check lable
+            # update check label
             for i in range(len(phone_list)):
                 if (
                     int(phone_list[i][5]) > spat_cell_split
                     and int(phone_list[i][9]) < dur_constr
                     and phone_list[i][-1] != "checked"
                 ):
-                    # passing phone observ
+                    # passing phone observe
                     phone_list[i].append("checked")
 
             # put those not checked together with gps
@@ -310,7 +310,7 @@ def combineGPSandPhoneStops(arg):
                     # two consecutive observation
                     # if phonestay_left != 0 and phonestay_right < len(user[d]) - 1:
                     # ignore if they are at the beginning or the end of traj
-                    prev_gps = next_gps = 0  # find prevous and next gps
+                    prev_gps = next_gps = 0  # find previous and next gps
                     found_prev_gps = False
                     found_next_gps = False
                     for prev in range(phonestay_left - 1, -1, -1):
@@ -516,7 +516,7 @@ def combineGPSandPhoneStops(arg):
                             and dist > 1000 * spat_constr_gps
                             and speed_dep < 200
                         ):
-                            # spatially seperate enough and can travel, add in gps
+                            # spatially separate enough and can travel, add in gps
                             # print('1132: dist>low_acc, add phone stay')
                             # leave phone stay there
                             user[d][phonestay_left].append("checked")
@@ -564,7 +564,7 @@ def combineGPSandPhoneStops(arg):
                             and dist > 1000 * spat_constr_gps
                             and speed_retn < 200
                         ):
-                            # spatially seperate enough and can travel, add in gps
+                            # spatially separate enough and can travel, add in gps
                             # print('1122: dist>low_acc, add phone stay')
                             # leave phone stay there, we later update duration for the gps stay
                             user[d][phonestay_left].append("checked")
@@ -572,7 +572,7 @@ def combineGPSandPhoneStops(arg):
                             user[d][phonestay_left][2] = "addedphonestay"
                             user[d][phonestay_right][2] = "addedphonestay"
                             flag_changed = True
-                        else:  # remain phone observ, but use gps location
+                        else:  # remain phone observe, but use gps location
                             # print('1121: low_acc > dist, merge with gps stay, meaning extend gps dur')
                             temp = user[d][phonestay_left][3:]
                             user[d][phonestay_left][3:] = user[d][next_gps][3:]
@@ -644,7 +644,7 @@ def combineGPSandPhoneStops(arg):
                 trace[9] = -1
         if len(user[d]) == 1:
             user[d][0][9] = -1
-        # remove and add back; because phone stays are distroyed as multiple, should be combined as one
+        # remove and add back; because phone stays are destroyed as multiple, should be combined as one
         i = 0
         while i < len(user[d]):
             if user[d][i][2] == "addedphonestay":
