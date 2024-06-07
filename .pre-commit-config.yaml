@@ -39,12 +39,13 @@ repos:
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.4.7"
-    hooks:
-      - id: ruff
-        args: ["--fix", "--show-fixes"]
-      - id: ruff-format
+  # TODO: Uncomment after code-cleanup
+  #  - repo: https://github.com/astral-sh/ruff-pre-commit
+  #    rev: "v0.4.7"
+  #    hooks:
+  #      - id: ruff
+  #        args: ["--fix", "--show-fixes"]
+  #      - id: ruff-format
 
   #  TODO: Uncomment as the final step before packaging after code refactor
   #  - repo: https://github.com/pre-commit/mirrors-mypy
