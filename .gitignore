@@ -97,7 +97,6 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-
 # pytype static type analyzer
 .pytype/
 
@@ -106,3 +105,15 @@ cython_debug/
 
 # Ignore MAC specific directory manager .DS_Store file
 **/.DS_Store
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# NPM
+node_modules/
+
+# Ruff Lint
+.ruff_cache/
