@@ -5,7 +5,7 @@ if the duration is smaller than duration constraint threshold, remove the point 
 input:
     user stay information
     duration constraint threshold
-outout:
+output:
     updated user stay information
 """
 
@@ -98,7 +98,7 @@ def update_duration(user, dur_constr, order_of_execution=1):
             if (
                 float(trace[9]) < dur_constr
             ):  # change back keep full trajectory: do not use center for those are not stays
-                # make everything -1 is stay_dur < constarint
+                # make everything -1 is stay_dur < constraint
                 trace[6], trace[7], trace[8], trace[9] = (
                     -1,
                     -1,

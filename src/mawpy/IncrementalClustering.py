@@ -1,12 +1,12 @@
 """
-Performe clustering on multiple locations of one user based on a spatial threshold
+Perform clustering on multiple locations of one user based on a spatial threshold
 Each cluster of locations represents a potential stay
 
 input:
     gps stay information / celluar stay information
     spatial threshold
     duration constraint threshold (for detect common stay)
-outout:
+output:
     potential stays represented by clusters of locations
 """
 
@@ -141,7 +141,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
     if len(loc4cluster) == 0:
         return user
 
-    ### If for the first cluster, wee find that the subsequnt point agress to the spatial constraint, add it.
+    ### If for the first cluster, we find that the subsequent point agress to the spatial constraint, add it.
     ### Else make a new cluster -> Still if no points are there make a new cluster with leeft out points
 
     ## start clustering
@@ -175,10 +175,10 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                 L.append(Cnew)  # add cluster on top of others
                 Ccurrent = Cnew  # make Ccurrent as Cnew
 
-    ### apply k means clustering with k same as lenth of L
+    ### apply k means clustering with k same as length of L
     L = K_meansClusterLloyd(
         L
-    )  # correct an order issue related to incremental clustering # clusters get appeneded to list L
+    )  # correct an order issue related to incremental clustering # clusters get appended to list L
 
     ### create a dictionary which takes each point and keeps information of its cluster center and radius
     ## centers of each locations that are clustered
@@ -195,9 +195,9 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                 cent[1],
                 r,
             )  # store the center with cluster radius
-    ### Update trace itself using clustre center and max(radius, uncertainity)
+    ### Update trace itself using clustre center and max(radius, uncertainty)
     if dur_constr:  # modify locations of stays to aggregated centers of stays
-        ## replace stay_lat, stay_long and stay_unc with the cluster lat, cluster_long and max between radius and uncertainity
+        ## replace stay_lat, stay_long and stay_unc with the cluster lat, cluster_long and max between radius and uncertainty
         ## trace[6] is stay_lat and trace[7] is stay_long, trace[3] is orig_lat, trace[4] is orig_long
 
         for d in user.keys():
@@ -206,7 +206,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                     trace[6],
                     trace[7],
                 ) in mapLocation2cluCenter:  # if trace is a dictionary keey
-                    # add infor on the index
+                    # add info on the index
                     trace[6], trace[7], trace[8] = (
                         mapLocation2cluCenter[(trace[6], trace[7])][0],
                         mapLocation2cluCenter[(trace[6], trace[7])][1],
@@ -261,7 +261,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                         a_location
                     )  # if it is true then add to last element of all_stays
                 else:
-                    all_stays.append([a_location])  # add as a seperate stay
+                    all_stays.append([a_location])  # add as a separate stay
     ### as soon as the nested entry from all_stays is added to stays_combined, it is removed from all_stays
     stay_index = 0
     stays_combined.append(
@@ -272,7 +272,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
     """
     Convert to float
     """
-    ### below coordinares are conveerted to float and have corrdinates for last entry in stays_combined
+    ### below coordinares are conveerted to float and have coordinates for last entry in stays_combined
     update_lat = float(stays_combined[-1][-1][6])
     update_long = float(stays_combined[-1][-1][7])
 
@@ -327,7 +327,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                     next_stay = all_stays.pop(
                         0
                     )  # get next element in all_stays ie.e first entry
-                    # check distance betweeen next_stay and update_lat and update_long
+                    # check distance between next_stay and update_lat and update_long
                     if (
                         distance(
                             tuple([float(x) for x in next_stay[-1][6:8]]),
@@ -348,8 +348,8 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                         update_lat = np.mean(lat_set)
                         update_long = np.mean(long_set)
                     else:  # if > 0.2 km
-                        stays_combined.append(current_stay)  # add as seperate entry
-                        stays_combined.append(next_stay)  # add as seperate entry
+                        stays_combined.append(current_stay)  # add as separate entry
+                        stays_combined.append(next_stay)  # add as separate entry
                         update_lat = float(stays_combined[-1][-1][6])
                         update_long = float(stays_combined[-1][-1][7])
     ### this goes through each nest in stays_combined, gets the mean latitude and longitude and appends these to stays_output
@@ -375,7 +375,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
             a_stay[i][7] = str(new_long)
         stays_output.append(a_stay)
 
-    ##Convert stays into a disctionary
+    ##Convert stays into a dictionary
     dict_output = {}
     for a_stay in stays_output:
         for a_record in a_stay:

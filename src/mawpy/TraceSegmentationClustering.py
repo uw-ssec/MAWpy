@@ -32,7 +32,7 @@ def diameterExceedCnstr(traj, i, j, spat_constr):
     :param i:
     :param j:
     :param spat_constr:
-    :return: Ture or False
+    :return: True or False
     """
     ### i is starting row of interest and j is end row of interest for the trace.
     ### traj[m][3] denotes orig_lat and traj[m][4] denotes orig_long. 5 is rounding off the decimals
@@ -113,7 +113,7 @@ def diameterExceedCnstr_newTrace(trace_set, new_trace, spat_constr):
     max_x = 0
     max_y = 0
     max_aprox = 0
-    ### loop through all the traces in exisitng trace and get the maximum distance from new trace
+    ### loop through all the traces in existing trace and get the maximum distance from new trace
     for an_existing_trace in trace_set:
         approx_dist = (an_existing_trace[0] - new_trace[0]) ** 2 + (
             an_existing_trace[1] - new_trace[1]
@@ -219,7 +219,7 @@ def cluster_traceSegmentation(user, spat_constr, dur_constr):
     day_set = list(user.keys())
     day_set.sort()
 
-    ### combine stays with same gps cooridnates together
+    ### combine stays with same gps coordinates together
     for a_day in day_set:
         for a_location in user[a_day]:
             if len(all_stays) == 0:
@@ -309,7 +309,7 @@ def cluster_traceSegmentation(user, spat_constr, dur_constr):
             a_stay[i][7] = str(new_long)
         stays_output.append(a_stay)
 
-    ##Convert stays into a disctionary
+    ##Convert stays into a dictionary
     dict_output = {}
     for a_stay in stays_output:
         for a_record in a_stay:

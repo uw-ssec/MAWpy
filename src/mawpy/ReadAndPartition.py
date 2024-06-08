@@ -4,7 +4,7 @@ then partition them into different parts by apply partition threshold on uncerta
 
 input:
     raw user information
-outout:
+output:
     partitioned user information: gps stay information / celluar stay information
 
 """

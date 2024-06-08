@@ -1,5 +1,5 @@
 """
-calculte distance between two gps points
+calculate distance between two gps points
 :param lat1:
 :param lon1:
 :param lat2:
