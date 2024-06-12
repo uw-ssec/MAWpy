@@ -1,1 +1,2 @@
-Hello! Welcome to the "ReadTheDocs" landing page for "Mobility Analysis Workflow" by UW Think Lab.
+Hello! Welcome to the "ReadTheDocs" landing page for "Mobility Analysis
+Workflow" by UW Think Lab.
