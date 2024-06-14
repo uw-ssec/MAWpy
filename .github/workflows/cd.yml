@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - main-test
+      - main
   release:
     types:
       - published
