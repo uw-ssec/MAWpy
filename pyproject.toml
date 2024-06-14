@@ -25,3 +25,6 @@ dev = [
     "pre-commit>=3.6.1",
     "nox>=2024.3.2",
 ]
+docs = [
+    "jupyter-book",
+]
