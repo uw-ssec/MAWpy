@@ -287,7 +287,7 @@ def _get_locations_to_cluster_center_map(clusters_list):
     return locations_to_cluster_center_map
 
 
-def cluster_incremental_for_user(df_by_user, spat_constr, dur_constr=None):
+def _run_for_user(df_by_user, spat_constr, dur_constr=None):
 
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
@@ -332,14 +332,14 @@ def cluster_incremental_for_user(df_by_user, spat_constr, dur_constr=None):
     return df_by_user
 
 
-def run(args):
+def _run(args):
     name, df_by_user, spatial_constraint, dur_constraint, outputFile = args
 
     if dur_constraint == -1:
-        df_by_user = cluster_incremental_for_user(df_by_user, spatial_constraint)
+        df_by_user = _run_for_user(df_by_user, spatial_constraint)
 
     else:
-        df_by_user = cluster_incremental_for_user(df_by_user, spatial_constraint, dur_constraint)
+        df_by_user = _run_for_user(df_by_user, spatial_constraint, dur_constraint)
 
     return df_by_user
 
@@ -391,7 +391,7 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
             psutil.virtual_memory().percent,
         )
         tasks = [
-            pool.apply_async(run, (task,))
+            pool.apply_async(_run, (task,))
             for task in [
                 (user, input_df[input_df[USER_ID] == user], spatial_constraint, dur_constraint, output_file)
                 for user in each_chunk
