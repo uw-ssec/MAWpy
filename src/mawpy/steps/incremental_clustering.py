@@ -24,7 +24,7 @@ from multiprocessing import Lock, cpu_count
 from geopy.distance import distance
 from sklearn.cluster import KMeans
 
-from mawpy.Cluster import Cluster
+from mawpy.cluster import Cluster
 from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, UNIX_START_T, UNIX_START_DATE, STAY_UNC, \
     ORIG_LONG, ORIG_UNC, STAY, STAY_LAT_PRE_COMBINED, STAY_LONG_PRE_COMBINED, STAY_PRE_COMBINED
 
