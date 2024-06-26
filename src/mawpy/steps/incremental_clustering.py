@@ -27,6 +27,7 @@ from sklearn.cluster import KMeans
 from mawpy.cluster import Cluster
 from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, UNIX_START_T, UNIX_START_DATE, STAY_UNC, \
     ORIG_LONG, ORIG_UNC, STAY, STAY_LAT_PRE_COMBINED, STAY_LONG_PRE_COMBINED, STAY_PRE_COMBINED
+from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
 
 
 def init(this_lock):
@@ -333,7 +334,7 @@ def _run_for_user(df_by_user, spat_constr, dur_constr=None):
 
 
 def _run(args):
-    name, df_by_user, spatial_constraint, dur_constraint, outputFile = args
+    df_by_user, spatial_constraint, dur_constraint = args
 
     if dur_constraint == -1:
         df_by_user = _run_for_user(df_by_user, spatial_constraint)
@@ -369,15 +370,8 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
 
     pool = Pool(cpu_count(), initializer=init, initargs=(this_lock,))
 
-    user_num_in_mem = 1000
-    input_df = pd.read_csv(input_file)
-    input_df[UNIX_START_DATE] = input_df[UNIX_START_T].apply(
-        lambda x: datetime.utcfromtimestamp(x).strftime('%Y-%m-%d'))
-    user_id_list = input_df[USER_ID].unique().tolist()
-    print("total number of users to be processed: ", len(user_id_list))
-
-    user_id_chunks = list(_divide_chunks(user_id_list, user_num_in_mem))
-    print("number of chunks to be processed", len(user_id_chunks))
+    input_df = get_preprocessed_dataframe(input_file)
+    user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
 
     chunk_count = 0
     tasks = []
@@ -393,7 +387,7 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
         tasks = [
             pool.apply_async(_run, (task,))
             for task in [
-                (user, input_df[input_df[USER_ID] == user], spatial_constraint, dur_constraint, output_file)
+                (input_df[input_df[USER_ID] == user], spatial_constraint, dur_constraint)
                 for user in each_chunk
             ]
         ]
