@@ -53,7 +53,7 @@ def _get_cluster_center(row, mapping, dur_constr):
         return lat_long[0], lat_long[1], unc
 
 
-def _mean_ignore_negative(series):
+def _mean_ignore_minus_ones(series):
     """
         Calculates the mean of the column without considering -1 entries in the column
     """
@@ -66,7 +66,7 @@ def _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avg
     """
     df_by_user.loc[df_by_user[STAY] == stay_to_update, STAY] = updated_stay
     merged_values = df_by_user[df_by_user[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
-    new_avg = merged_values.apply(_mean_ignore_negative).fillna(-1)
+    new_avg = merged_values.apply(_mean_ignore_minus_ones).fillna(-1)
 
     group_avgs.loc[group_avgs[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
     df_by_user.loc[df_by_user[STAY] == updated_stay, STAY_LAT] = new_avg.values[0]
@@ -343,18 +343,6 @@ def _run(args):
         df_by_user = _run_for_user(df_by_user, spatial_constraint, dur_constraint)
 
     return df_by_user
-
-
-if __name__ == "__main__":
-    """
-    param:
-        inputFile
-        partitionThreshold
-    """
-    inputFile = sys.argv[1]
-    outputFile = sys.argv[2]
-    spatial_constraint = float(sys.argv[3])
-    dur_constraint = int(sys.argv[4])
 
 
 def _divide_chunks(user_id_list, n):
