@@ -332,7 +332,7 @@ def cluster_incremental_for_user(df_by_user, spat_constr, dur_constr=None):
     return df_by_user
 
 
-def func(args):
+def run(args):
     name, df_by_user, spatial_constraint, dur_constraint, outputFile = args
 
     if dur_constraint == -1:
@@ -391,7 +391,7 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
             psutil.virtual_memory().percent,
         )
         tasks = [
-            pool.apply_async(func, (task,))
+            pool.apply_async(run, (task,))
             for task in [
                 (user, input_df[input_df[USER_ID] == user], spatial_constraint, dur_constraint, output_file)
                 for user in each_chunk
