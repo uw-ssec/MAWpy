@@ -377,12 +377,8 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
     tasks = []
     for each_chunk in user_id_chunks:
         print(
-            "Start processing bulk: ",
-            ++chunk_count,
-            " at time: ",
-            time.strftime("%m%d-%H:%M"),
-            " memory: ",
-            psutil.virtual_memory().percent,
+            f"Start processing bulk: {++chunk_count} at "
+            f"time: {time.strftime('%m%d-%H:%M')} memory: {psutil.virtual_memory().percent}"
         )
         tasks = [
             pool.apply_async(_run, (task,))
