@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from mawpy.constants import UNIX_START_DATE, UNIX_START_T, USER_ID
+from mawpy.constants import UNIX_START_DATE, UNIX_START_T
 
 
 def _divide_chunks(user_id_list, n):
