@@ -18,13 +18,14 @@ import time
 import numpy as np
 
 # from distance import distance
-from class_cluster import cluster
 from collections import defaultdict
 from multiprocessing import Pool
 from multiprocessing import Lock, cpu_count
 
 from geopy.distance import distance
 from sklearn.cluster import KMeans
+
+from mawpy.cluster import Cluster
 
 
 def init(l):
@@ -92,7 +93,7 @@ def K_meansClusterLloyd(L):
     L_new = []
     for a_cluster in membership:
         newC = (
-            cluster()
+            Cluster()
         )  # every label from k means - algorithm is assigned a  class cluster
         for a_location in membership[a_cluster]:
             newC.addPoint(a_location)
@@ -146,7 +147,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
 
     ## start clustering
     L = []
-    Cnew = cluster()
+    Cnew = Cluster()
     Cnew.addPoint(loc4cluster[0])  # add first coordinate to this cluster
     L.append(Cnew)  # add cluster with one just point to L
     Ccurrent = Cnew  # cCURRENT = Cnew
@@ -170,7 +171,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
             ### (Are we not checking duration here) If no cluster is found where the duration constraint is found, then create a new cluster and append it to L
 
             if Ccurrent == None:  # still if Ccurrent is none
-                Cnew = cluster()
+                Cnew = Cluster()
                 Cnew.addPoint(loc4cluster[i])  # add the point
                 L.append(Cnew)  # add cluster on top of others
                 Ccurrent = Cnew  # make Ccurrent as Cnew

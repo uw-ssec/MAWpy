@@ -1,9 +1,11 @@
 # importing the modules
+
 import pandas as pd
 import multiprocessing
-from IncrementalClustering import IC
 from UpdateStayDuration import USD
 import os
+
+from mawpy.IncrementalClustering import IC
 
 
 def clean_file(file_name):
@@ -26,8 +28,9 @@ def workflow1(
 
 
 if __name__ == "__main__":
+
     multiprocessing.freeze_support()
-    workflow1("input_file.csv", "output_file.csv", 1.0, 0, 300)
+    workflow1("input_updated.csv", "output_file.csv", 1.0, 0, 300)
     current_filename = "output_file.csv"
     new_filename = "outputfile_workflow1.csv"
     os.rename(current_filename, new_filename)
