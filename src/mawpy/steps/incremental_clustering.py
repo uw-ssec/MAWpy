@@ -364,8 +364,9 @@ def incremental_clustering(input_file, output_file, spatial_constraint, dur_cons
     chunk_count = 0
     tasks = []
     for each_chunk in user_id_chunks:
+        chunk_count += 1
         print(
-            f"Start processing bulk: {++chunk_count} at "
+            f"Start processing bulk: {chunk_count} at "
             f"time: {time.strftime('%m%d-%H:%M')} memory: {psutil.virtual_memory().percent}"
         )
         tasks = [
