@@ -1,13 +1,13 @@
 USER_ID = 'user_ID'
 STAY = 'stay'
 STAY_DUR = 'stay_dur'
-STAY_LAT = '             stay_lat'
+STAY_LAT = '             stay_lat' #TODO: currently sample csv shared (this is one of the examples with addditional spaces
 STAY_LONG = 'stay_long'
 STAY_UNC = 'stay_unc'
 STAY_LAT_PRE_COMBINED = 'stay_lat_pre_combined'
 STAY_LONG_PRE_COMBINED = 'stay_long_pre_combined'
 STAY_PRE_COMBINED = 'stay_pre_combined'
-ORIG_LAT = '             orig_lat'
+ORIG_LAT = '             orig_lat'#TODO: currently sample csv shared have non unifrom naming (this is one of the examples with addditional spaces)
 ORIG_LONG = 'orig_long'
 ORIG_UNC = 'orig_unc'
 UNIX_START_T = 'unix_start_t'
