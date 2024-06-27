@@ -1,9 +1,7 @@
 # importing the modules
-import datetime
 
 import pandas as pd
 import multiprocessing
-from mawpy.steps.incremental_clustering import incremental_clustering
 from UpdateStayDuration import USD
 import os
 
@@ -23,7 +21,7 @@ def workflow1(
     duration_constraint1,
     duration_constraint2,
 ):
-    incremental_clustering(input_file, output_file, spatial_constraint, duration_constraint1)
+    IC(input_file, output_file, spatial_constraint, duration_constraint1)
     clean_file(output_file)
     USD(output_file, output_file, duration_constraint2)
     clean_file(output_file)
