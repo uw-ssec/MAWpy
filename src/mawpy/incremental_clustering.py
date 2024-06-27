@@ -10,10 +10,11 @@
 import numpy as np
 
 # from distance import distance
-from class_cluster import cluster
 
 from geopy.distance import distance
 from sklearn.cluster import KMeans
+
+from mawpy.cluster import Cluster
 
 
 def K_meansClusterLloyd(L):
@@ -60,7 +61,7 @@ def K_meansClusterLloyd(L):
 
     L_new = []
     for a_cluster in membership:
-        newC = cluster()
+        newC = Cluster()
         for a_location in membership[a_cluster]:
             newC.addPoint(a_location)
         L_new.append(newC)
@@ -93,7 +94,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
 
     ## start clustering
     L = []
-    Cnew = cluster()
+    Cnew = Cluster()
     Cnew.addPoint(loc4cluster[0])
     L.append(Cnew)
     Ccurrent = Cnew
@@ -108,7 +109,7 @@ def cluster_incremental(user, spat_constr, dur_constr=None):
                     Ccurrent = C
                     break
             if Ccurrent == None:
-                Cnew = cluster()
+                Cnew = Cluster()
                 Cnew.addPoint(loc4cluster[i])
                 L.append(Cnew)
                 Ccurrent = Cnew
