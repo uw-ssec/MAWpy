@@ -4,9 +4,8 @@ data structure of a cluster
 
 import numpy as np
 
+from mawpy.distance import distance
 
-# sys.path.append("E:\\ProgramData\\python\\cuebiq_share_git")
-from distance import distance
 
 
 class Cluster:
