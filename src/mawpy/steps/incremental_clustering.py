@@ -9,7 +9,7 @@ input:
 output:
     potential stays represented by clusters of locations
 """
-
+import logging
 from typing import Optional
 
 import psutil
@@ -27,6 +27,7 @@ from mawpy.cluster import Cluster
 from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, STAY_UNC, ORIG_LONG, ORIG_UNC, STAY
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
 
+logger = logging.getLogger(__name__)
 
 def init(this_lock: Lock) -> None:
     global lock
@@ -352,7 +353,7 @@ def incremental_clustering(input_file: str, output_file: str, spatial_constraint
     input_df.set_index(keys=[USER_ID], inplace=True)
     for each_chunk in user_id_chunks:
         chunk_count += 1
-        print(
+        logger.info(
             f"Start processing bulk: {chunk_count} at "
             f"time: {time.strftime('%m%d-%H:%M')} memory: "
             f"{psutil.virtual_memory().percent}"

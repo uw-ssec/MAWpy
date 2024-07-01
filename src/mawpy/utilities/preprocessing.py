@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
 
 from mawpy.constants import UNIX_START_DATE, UNIX_START_T, USER_ID
+
+logger = logging.getLogger(__name__)
 
 
 def _divide_chunks(user_id_list: list[str], n: int) -> list[list[str]]:
@@ -15,10 +18,10 @@ def _divide_chunks(user_id_list: list[str], n: int) -> list[list[str]]:
 def get_list_of_chunks_by_column(df: pd.DataFrame, column_for_chunking: str, in_memory_rows_count: int = 1000) -> list[
     list[str]]:
     user_id_list = df[column_for_chunking].unique().tolist()
-    print("total number of users to be processed: ", len(user_id_list))
+    logger.info(f"total number of users to be processed:  {len(user_id_list)}")
 
     user_id_chunks = _divide_chunks(user_id_list, in_memory_rows_count)
-    print("number of chunks to be processed", len(user_id_chunks))
+    logger.info(f"number of chunks to be processed:  {len(user_id_chunks)}")
     return user_id_chunks
 
 
