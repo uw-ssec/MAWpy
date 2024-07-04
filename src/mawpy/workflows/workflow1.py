@@ -10,9 +10,10 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
-parser.add_argument("output_file", help="the output CSV file.")
+parser.add_argument("output_file", help="the CSV file to write the output to.")
 
 logger = logging.getLogger(__name__)
+
 
 def workflow1(
     input_file,
