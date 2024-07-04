@@ -10,7 +10,6 @@ output:
     potential stays represented by clusters of locations
 """
 import logging
-from typing import Optional
 
 import psutil
 import time
@@ -28,6 +27,7 @@ from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, ST
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
 
 logger = logging.getLogger(__name__)
+STAY_LAT_LONG = [STAY_LAT, STAY_LONG]
 
 def init(this_lock: Lock) -> None:
     global lock
@@ -65,14 +65,14 @@ def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFram
         Merges two stays for a user and updates the mean_lat and mean_long of the stay.
     """
     df_by_user.loc[df_by_user[STAY] == stay_to_update, STAY] = updated_stay
-    merged_values = df_by_user[df_by_user[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
+    merged_values = df_by_user[df_by_user[STAY] == updated_stay][STAY_LAT_LONG]
     new_avg = merged_values.apply(_mean_ignore_minus_ones).fillna(-1)
 
-    group_avgs.loc[group_avgs[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
-    df_by_user.loc[df_by_user[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
+    group_avgs.loc[group_avgs[STAY] == updated_stay, STAY_LAT_LONG] = new_avg.values
+    df_by_user.loc[df_by_user[STAY] == updated_stay, STAY_LAT_LONG] = new_avg.values
 
     group_avgs.loc[group_avgs_index_to_update, STAY] = updated_stay
-    group_avgs.loc[group_avgs_index_to_update, [STAY_LAT, STAY_LONG]] = new_avg.values
+    group_avgs.loc[group_avgs_index_to_update, STAY_LAT_LONG] = new_avg.values
 
     return df_by_user
 
@@ -96,7 +96,7 @@ def _get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.D
     df_by_user[STAY_LONG] = pd.to_numeric(df_by_user[STAY_LONG])
 
     # Calculate the average values for each group
-    group_avgs = df_by_user.groupby(STAY)[[STAY_LAT, STAY_LONG]].mean().reset_index()
+    group_avgs = df_by_user.groupby(STAY)[STAY_LAT_LONG].mean().reset_index()
 
     # Initialize an empty list to store the groups to merge
     merge_indices = []
@@ -284,7 +284,7 @@ def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     return locations_to_cluster_center_map
 
 
-def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: Optional[float] = None) -> pd.DataFrame:
+def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
@@ -318,9 +318,8 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: Opti
     df_by_user[[STAY_LAT, STAY_LONG, STAY_UNC]] = df_by_user.apply(
         lambda row: _get_cluster_center(row, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
 
-
-    df_by_user[STAY] = ((df_by_user[[STAY_LAT, STAY_LONG]] != df_by_user[[STAY_LAT, STAY_LONG]].shift())
-                          .any(axis=1).cumsum())
+    df_by_user[STAY] = ((df_by_user[STAY_LAT_LONG] != df_by_user[STAY_LAT_LONG].shift())
+                        .any(axis=1).cumsum())
 
     df_by_user = _get_combined_stay(df_by_user)
 
