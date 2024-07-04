@@ -1,10 +1,18 @@
 # importing the modules
 import datetime
+import logging
 
 import multiprocessing
 from mawpy.steps.incremental_clustering import incremental_clustering
 import os
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_file", help="the CSV file to read the input from")
+parser.add_argument("output_file", help="the output CSV file.")
+
+logger = logging.getLogger(__name__)
 
 def workflow1(
     input_file,
@@ -17,12 +25,12 @@ def workflow1(
 
 
 if __name__ == "__main__":
-
+    args = parser.parse_args()
     multiprocessing.freeze_support()
     st = datetime.datetime.now()
-    workflow1("/Users/anujsinha/MAWpy/src/mawpy/input_file_old.csv", "output_file.csv", 1.0, 0, 300)
+    workflow1(args.input_file, "output_file.csv", 1.0, 0, 300)
     en = datetime.datetime.now()
-    print(en - st)
+    logger.info(f"Total Time taken for execution: {en - st}")
     current_filename = "output_file.csv"
-    new_filename = "outputfile_workflow1.csv"
+    new_filename = args.output_file
     os.rename(current_filename, new_filename)
