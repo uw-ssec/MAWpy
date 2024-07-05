@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 from multiprocessing import Pool
-from multiprocessing import Lock, cpu_count
+from multiprocessing import cpu_count
 
 from geopy.distance import distance
 from sklearn.cluster import KMeans
@@ -28,10 +28,6 @@ from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_o
 
 logger = logging.getLogger(__name__)
 STAY_LAT_LONG = [STAY_LAT, STAY_LONG]
-
-def init(this_lock: Lock) -> None:
-    global lock
-    lock = this_lock
 
 
 def _get_cluster_center(row: pd.Series, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
@@ -77,7 +73,7 @@ def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFram
     return df_by_user
 
 
-def _get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.DataFrame:
+def _get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.DataFrame: # TODO: Confirm hard-coded-value
     """
         Merges chronologically sorted stays for a user where distance between the mean_lat and mean_long of two
         consecutive stays for a user is less than the threshold.
@@ -339,8 +335,6 @@ def _run(args: tuple) -> pd.DataFrame:
 
 
 def incremental_clustering(input_file: str, output_file: str, spatial_constraint: float, dur_constraint: float) -> None:
-    # this_lock = Lock()  # thread locker
-    # pool = Pool(cpu_count(), initializer=init, initargs=(this_lock,))
 
     pool = Pool(cpu_count())
 
