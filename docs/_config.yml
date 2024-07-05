@@ -1,7 +1,7 @@
 # Book settings
 # Learn more at https://jupyterbook.org/customize/config.html
 
-title: Mobility Analysis Workflow
+title: Mobility Analysis Workflow (MAW): an open-source library for assessing data biases for human mobility analysis
 author: UW Think Lab
 logo: logo.png
 

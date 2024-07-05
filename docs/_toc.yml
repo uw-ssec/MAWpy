@@ -2,6 +2,11 @@
 # Learn more at https://jupyterbook.org/customize/toc.html
 
 format: jb-book
-root: intro
+root: index
 chapters:
-  - file: demo
+  - file: abstract
+  - file: intro
+  - file: relatedwork
+  - file: MAWfwk
+  - file: workflows
+  - file: casestudy
