@@ -9,9 +9,7 @@ input:
 output:
     potential stays represented by clusters of locations
 """
-
-import sys
-from datetime import datetime
+import logging
 
 import psutil
 import time
@@ -19,23 +17,20 @@ import numpy as np
 import pandas as pd
 
 from multiprocessing import Pool
-from multiprocessing import Lock, cpu_count
+from multiprocessing import cpu_count
 
 from geopy.distance import distance
 from sklearn.cluster import KMeans
 
 from mawpy.cluster import Cluster
-from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, UNIX_START_T, UNIX_START_DATE, STAY_UNC, \
-    ORIG_LONG, ORIG_UNC, STAY, STAY_LAT_PRE_COMBINED, STAY_LONG_PRE_COMBINED, STAY_PRE_COMBINED
+from mawpy.constants import USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, STAY_UNC, ORIG_LONG, ORIG_UNC, STAY
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
 
-
-def init(this_lock):
-    global lock
-    lock = this_lock
+logger = logging.getLogger(__name__)
+STAY_LAT_LONG = [STAY_LAT, STAY_LONG]
 
 
-def _get_cluster_center(row, mapping, dur_constr):
+def _get_cluster_center(row: pd.Series, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
     """
     Returns the lat and long of the cluster to which the trace(row) belongs.
     """
@@ -53,33 +48,32 @@ def _get_cluster_center(row, mapping, dur_constr):
         return lat_long[0], lat_long[1], unc
 
 
-def _mean_ignore_minus_ones(series):
+def _mean_ignore_minus_ones(series: pd.Series) -> float:
     """
         Calculates the mean of the column without considering -1 entries in the column
     """
     return series[series != -1].mean()
 
 
-def _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avgs_index_to_update):
+def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFrame, group_avgs: pd.DataFrame,
+                 group_avgs_index_to_update: int) -> pd.DataFrame:
     """
         Merges two stays for a user and updates the mean_lat and mean_long of the stay.
     """
     df_by_user.loc[df_by_user[STAY] == stay_to_update, STAY] = updated_stay
-    merged_values = df_by_user[df_by_user[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
+    merged_values = df_by_user[df_by_user[STAY] == updated_stay][STAY_LAT_LONG]
     new_avg = merged_values.apply(_mean_ignore_minus_ones).fillna(-1)
 
-    group_avgs.loc[group_avgs[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
-    df_by_user.loc[df_by_user[STAY] == updated_stay, STAY_LAT] = new_avg.values[0]
-    df_by_user.loc[df_by_user[STAY] == updated_stay, STAY_LONG] = new_avg.values[1]
+    group_avgs.loc[group_avgs[STAY] == updated_stay, STAY_LAT_LONG] = new_avg.values
+    df_by_user.loc[df_by_user[STAY] == updated_stay, STAY_LAT_LONG] = new_avg.values
 
     group_avgs.loc[group_avgs_index_to_update, STAY] = updated_stay
-    group_avgs.loc[group_avgs_index_to_update, STAY_LAT] = new_avg.values[0]
-    group_avgs.loc[group_avgs_index_to_update, STAY_LONG] = new_avg.values[1]
+    group_avgs.loc[group_avgs_index_to_update, STAY_LAT_LONG] = new_avg.values
 
     return df_by_user
 
 
-def _get_combined_stay(df_by_user, threshold=1):
+def _get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.DataFrame: # TODO: Confirm hard-coded-value
     """
         Merges chronologically sorted stays for a user where distance between the mean_lat and mean_long of two
         consecutive stays for a user is less than the threshold.
@@ -94,41 +88,39 @@ def _get_combined_stay(df_by_user, threshold=1):
                          are merged.
     """
 
-    # Calculate the average values for each group
-    df_by_user[STAY_LAT_PRE_COMBINED] = df_by_user[STAY_LAT]
-    df_by_user[STAY_LONG_PRE_COMBINED] = df_by_user[STAY_LONG]
-    df_by_user[STAY_PRE_COMBINED] = df_by_user[STAY]
-
     df_by_user[STAY_LAT] = pd.to_numeric(df_by_user[STAY_LAT])
     df_by_user[STAY_LONG] = pd.to_numeric(df_by_user[STAY_LONG])
 
-    group_avgs = df_by_user.groupby(STAY)[[STAY_LAT, STAY_LONG]].mean().reset_index()
+    # Calculate the average values for each group
+    group_avgs = df_by_user.groupby(STAY)[STAY_LAT_LONG].mean().reset_index()
 
     # Initialize an empty list to store the groups to merge
     merge_indices = []
 
     total_groups = len(group_avgs)
 
-    group_avgs_pre_merges = group_avgs
     # Iterate over the group averages to find groups to merge
     for i in range(total_groups - 1):
-        this_stay = group_avgs.loc[i, STAY]
-        this_stay_lat = group_avgs.loc[i, STAY_LAT]
-        this_stay_long = group_avgs.loc[i, STAY_LONG]
+        this_row = group_avgs.loc[i]
+        this_stay = this_row[STAY]
+        this_stay_lat = this_row[STAY_LAT]
+        this_stay_long = this_row[STAY_LONG]
 
         if this_stay_lat == -1 and this_stay_long == -1:
             continue
 
-        next_stay = group_avgs.loc[i + 1, STAY]
-        next_stay_lat = group_avgs.loc[i + 1, STAY_LAT]
-        next_stay_long = group_avgs.loc[i + 1, STAY_LONG]
+        next_row = group_avgs.loc[i + 1]
+        next_stay = next_row[STAY]
+        next_stay_lat = next_row[STAY_LAT]
+        next_stay_long = next_row[STAY_LONG]
 
         if next_stay_lat == -1 and next_stay_long == -1:
 
             if i + 2 < total_groups:
-                next_to_next_stay = group_avgs.loc[i + 2, STAY]
-                next_to_next_stay_lat = group_avgs.loc[i + 2, STAY_LAT]
-                next_to_next_stay_long = group_avgs.loc[i + 2, STAY_LONG]
+                next_to_next_row = group_avgs.loc[i + 2]
+                next_to_next_stay = next_to_next_row[STAY]
+                next_to_next_stay_lat = next_to_next_row[STAY_LAT]
+                next_to_next_stay_long = next_to_next_row[STAY_LONG]
 
                 if threshold > distance(tuple([this_stay_lat, this_stay_long]),
                                         tuple([next_to_next_stay_lat, next_to_next_stay_long])).km:
@@ -143,7 +135,7 @@ def _get_combined_stay(df_by_user, threshold=1):
     return df_by_user
 
 
-def _k_means_cluster_lloyd(cluster_list):
+def _k_means_cluster_lloyd(cluster_list: list[Cluster]) -> list[Cluster]:
     """
     Lloyd's Algorithm for K-Means Clustering
     """
@@ -215,7 +207,7 @@ def _k_means_cluster_lloyd(cluster_list):
     return cluster_list_new
 
 
-def _get_clusters(locations_for_clustering, spat_constr):
+def _get_clusters(locations_for_clustering: list[tuple[str, str]], spat_constr: float) -> list[Cluster]:
     """
         Get list of clusters from trace locations based on the spatial constraint.
     """
@@ -268,7 +260,7 @@ To Do: Figure out the data structure used to perform all actions.
 
 
 # if a duration constraint is provided, then get loc4cluster as latitude and longitude coordinates
-def _get_locations_to_cluster_center_map(clusters_list):
+def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     """
         Getting a mapping for each point in the cluster to the cluster center and cluster radius.
     """
@@ -288,8 +280,7 @@ def _get_locations_to_cluster_center_map(clusters_list):
     return locations_to_cluster_center_map
 
 
-def _run_for_user(df_by_user, spat_constr, dur_constr=None):
-
+def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
@@ -323,17 +314,15 @@ def _run_for_user(df_by_user, spat_constr, dur_constr=None):
     df_by_user[[STAY_LAT, STAY_LONG, STAY_UNC]] = df_by_user.apply(
         lambda row: _get_cluster_center(row, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
 
-    df_by_user = df_by_user.sort_values(by=[UNIX_START_DATE], ascending=True)
-
-    df_by_user[STAY] = ((df_by_user[[STAY_LAT, STAY_LONG]] != df_by_user[[STAY_LAT, STAY_LONG]].shift())
-                          .any(axis=1).cumsum())
+    df_by_user[STAY] = ((df_by_user[STAY_LAT_LONG] != df_by_user[STAY_LAT_LONG].shift())
+                        .any(axis=1).cumsum())
 
     df_by_user = _get_combined_stay(df_by_user)
 
     return df_by_user
 
 
-def _run(args):
+def _run(args: tuple) -> pd.DataFrame:
     df_by_user, spatial_constraint, dur_constraint = args
 
     if dur_constraint == -1:
@@ -345,41 +334,38 @@ def _run(args):
     return df_by_user
 
 
-def _divide_chunks(user_id_list, n):
-    user_id_chunks = []
-    for i in range(0, len(user_id_list), n):  # looping till length usernamelist
-        user_id_chunks.append(user_id_list[i: i + n])
-    return user_id_chunks
+def incremental_clustering(input_file: str, output_file: str, spatial_constraint: float, dur_constraint: float) -> None:
 
-
-def incremental_clustering(input_file, output_file, spatial_constraint, dur_constraint):
-
-    this_lock = Lock()  # thread locker
-
-    pool = Pool(cpu_count(), initializer=init, initargs=(this_lock,))
+    pool = Pool(cpu_count())
 
     input_df = get_preprocessed_dataframe(input_file)
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
 
     chunk_count = 0
-    tasks = []
+    df_output_list = []
+    input_df.set_index(keys=[USER_ID], inplace=True)
     for each_chunk in user_id_chunks:
         chunk_count += 1
-        print(
+        logger.info(
             f"Start processing bulk: {chunk_count} at "
-            f"time: {time.strftime('%m%d-%H:%M')} memory: {psutil.virtual_memory().percent}"
+            f"time: {time.strftime('%m%d-%H:%M')} memory: "
+            f"{psutil.virtual_memory().percent}"
         )
-        tasks = [
-            pool.apply_async(_run, (task,))
-            for task in [
-                (input_df[input_df[USER_ID] == user], spatial_constraint, dur_constraint)
-                for user in each_chunk
-            ]
-        ]
+        tasks = []
+        for user in each_chunk:
+            ## A user with single trace returns a pd.Series which requires trasnposition in pd.Dataframe for processing.
+            df = pd.DataFrame(input_df.loc[user]).transpose() \
+                if type(input_df.loc[user]) is pd.Series else input_df.loc[user]
+            task = pool.apply_async(_run, ((df, spatial_constraint, dur_constraint),))
+            tasks.append(task)
+        df_output_list_per_user = [t.get().reset_index() for t in tasks]
+        df_output_list.extend(df_output_list_per_user)
 
     pool.close()
     pool.join()
-    df_results = [t.get() for t in tasks]
 
-    final_df = pd.concat(df_results)
-    final_df.to_csv(output_file)
+    df_output = pd.concat(df_output_list)
+
+    # unique_users = df_output[USER_ID].unique()
+    df_output.dropna(how="all")
+    df_output.to_csv(output_file, index=False)
