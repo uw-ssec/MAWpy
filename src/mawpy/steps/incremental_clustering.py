@@ -233,15 +233,17 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 
 
 def _run(args: tuple) -> pd.DataFrame:
-    df_by_user, spatial_constraint, dur_constraint = args
+    df_by_user_chunk, spatial_constraint, dur_constraint = args
 
     if dur_constraint == -1:
-        df_by_user = df_by_user.groupby(USER_ID).apply(lambda x: _run_for_user(x, spatial_constraint))
+        df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
+                            .apply(lambda x: _run_for_user(x, spatial_constraint)))
 
     else:
-        df_by_user = df_by_user.groupby(USER_ID).apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint))
+        df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
+                            .apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint)))
 
-    return df_by_user
+    return df_by_user_chunk
 
 
 def incremental_clustering(input_file: str, output_file: str, spatial_constraint: float, dur_constraint: float) -> pd.DataFrame:
