@@ -4,6 +4,7 @@ import logging
 
 import multiprocessing
 from mawpy.steps.incremental_clustering import incremental_clustering
+from mawpy.steps.update_stay_duration import update_stay_duration
 import os
 
 import argparse
@@ -22,7 +23,8 @@ def workflow1(
     duration_constraint1,
     duration_constraint2,
 ):
-    incremental_clustering(input_file, output_file, spatial_constraint, duration_constraint1)
+    df_output = incremental_clustering(input_file, output_file, spatial_constraint, duration_constraint1)
+    update_stay_duration(output_file, duration_constraint2, input_df=df_output)
 
 
 if __name__ == "__main__":
