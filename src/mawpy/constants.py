@@ -12,3 +12,5 @@ ORIG_LONG = 'orig_long'
 ORIG_UNC = 'orig_unc'
 UNIX_START_T = 'unix_start_t'
 UNIX_START_DATE = 'unix_start_date'
+
+STAY_LAT_LONG = [STAY_LAT, STAY_LONG]
