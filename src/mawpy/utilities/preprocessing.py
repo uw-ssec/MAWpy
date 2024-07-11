@@ -15,7 +15,7 @@ def _divide_chunks(user_id_list: list[str], n: int) -> list[list[str]]:
     return user_id_chunks
 
 
-def get_list_of_chunks_by_column(df: pd.DataFrame, column_for_chunking: str, in_memory_rows_count: int = 1000) -> list[
+def get_list_of_chunks_by_column(df: pd.DataFrame, column_for_chunking: str, in_memory_rows_count: int = 100) -> list[
     list[str]]:
     user_id_list = df[column_for_chunking].unique().tolist()
     logger.info(f"total number of users to be processed:  {len(user_id_list)}")
@@ -29,5 +29,5 @@ def get_preprocessed_dataframe(input_file_path: str) -> pd.DataFrame:
     input_df = pd.read_csv(input_file_path)
     input_df[UNIX_START_DATE] = input_df[UNIX_START_T].apply(
         lambda x: datetime.utcfromtimestamp(x).strftime('%Y-%m-%d'))
-    input_df.sort_values(by=[USER_ID, UNIX_START_DATE], ascending=True, inplace=True)
+    input_df.sort_values(by=[USER_ID, UNIX_START_T, UNIX_START_DATE], ascending=True, inplace=True)
     return input_df
