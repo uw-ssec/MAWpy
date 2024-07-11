@@ -29,7 +29,7 @@ def workflow2(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    multiprocessing.freeze_support()
+    multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
     workflow2(args.input_file, "output_file.csv", 1.0, 0, 300)
     en = datetime.datetime.now()
