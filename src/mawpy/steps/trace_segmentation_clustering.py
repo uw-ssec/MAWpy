@@ -9,7 +9,7 @@ import psutil
 from mawpy.constants import (USER_ID, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, UNIX_START_T,
                              STAY_LAT, STAY_LONG, STAY_DUR, STAY)
 from mawpy.distance import distance
-from mawpy.steps.common import get_combined_stay, get_stay_groups
+from mawpy.utilities.common import get_combined_stay, get_stay_groups
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
 
 logger = logging.getLogger(__name__)
