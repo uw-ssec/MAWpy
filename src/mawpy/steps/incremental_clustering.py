@@ -190,10 +190,11 @@ def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     return locations_to_cluster_center_map
 
 
-def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None) -> pd.DataFrame:
+def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
+    df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
     if dur_constr:  # cluster locations of stays to obtain aggregated stayes
         # get unique GPS stay points if stay duration is greater than duration constraint
