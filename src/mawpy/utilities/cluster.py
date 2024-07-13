@@ -14,12 +14,15 @@ class Cluster:
         self.radius = 0
 
     def add_point(self, point):
-        self.pList.append((float(point[0]), float(point[1])))
+        self.pList.append(point)
+        self.update_center()
+
+    def add_points(self, list_points):
+        self.pList.extend(list_points)
         self.update_center()
 
     def update_center(self):
-        self.center[0] = np.mean([p[0] for p in self.pList])
-        self.center[1] = np.mean([p[1] for p in self.pList])
+        self.center = np.mean([p for p in self.pList], axis=0)
 
     def get_distance_from_center(self, point):
         return distance(self.center[0], self.center[1], point[0], point[1])
@@ -42,6 +45,4 @@ class Cluster:
         self.center = [0, 0]
 
     def empty(self):
-        if len(self.pList) == 0:
-            return True
-        return False
+        return len(self.pList) == 0
