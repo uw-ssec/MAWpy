@@ -11,13 +11,8 @@ output:
 """
 import logging
 
-import psutil
-import time
 import numpy as np
 import pandas as pd
-
-from multiprocessing import Pool
-from multiprocessing import cpu_count
 
 from sklearn.cluster import KMeans
 
@@ -26,7 +21,7 @@ from mawpy.constants import (USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, S
 from mawpy.distance import distance
 from mawpy.utilities.common import get_combined_stay, get_stay_groups
 from mawpy.utilities.cluster import Cluster
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
+from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +107,7 @@ def _k_means_cluster_lloyd(cluster_list: list[Cluster]) -> list[Cluster]:
         new_cluster = (
             Cluster()
         )  # every label from k means - algorithm is assigned a  class cluster
-        for a_location in membership[a_cluster]:
-            new_cluster.add_point(a_location)
+        new_cluster.add_points(membership[a_cluster])
         cluster_list_new.append(new_cluster)
 
     return cluster_list_new
@@ -233,10 +227,10 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
     return df_by_user
 
 
-def _run(args: tuple) -> pd.DataFrame:
-    df_by_user_chunk, spatial_constraint, dur_constraint = args
+def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
+    spatial_constraint, dur_constraint = args
 
-    if dur_constraint == -1:
+    if dur_constraint <= 0 or dur_constraint is None:
         df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
                             .apply(lambda x: _run_for_user(x, spatial_constraint)))
 
@@ -247,34 +241,15 @@ def _run(args: tuple) -> pd.DataFrame:
     return df_by_user_chunk
 
 
-def incremental_clustering(input_file: str, output_file: str, spatial_constraint: float, dur_constraint: float) -> pd.DataFrame:
-
-    pool = Pool(cpu_count())
-
+def incremental_clustering(input_file: str, output_file: str, spatial_constraint: float,
+                           dur_constraint: float) -> pd.DataFrame:
     input_df = get_preprocessed_dataframe(input_file)
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
-
-    chunk_count = 0
-    tasks = []
-    for each_chunk in user_id_chunks:
-        chunk_count += 1
-        logger.info(
-            f"Start processing bulk: {chunk_count} at "
-            f"time: {time.strftime('%m%d-%H:%M')} memory: "
-            f"{psutil.virtual_memory().percent}"
-        )
-        task = pool.apply_async(_run, ((input_df[input_df[USER_ID].isin(each_chunk)], spatial_constraint, dur_constraint),))
-        tasks.append(task)
-    df_output_list = [t.get().reset_index(drop=True) for t in tasks]
-
-    pool.close()
-    pool.join()
-
-    df_output = pd.concat(df_output_list)
-
-    df_output.dropna(how="all") #TODO: confirm row drop
-    df_output = df_output[[USER_ID, UNIX_START_T, UNIX_START_DATE,
+    args = (spatial_constraint, dur_constraint)
+    output_df = execute_parallel(user_id_chunks, input_df, _run, args)
+    output_df = output_df[[USER_ID, UNIX_START_T, UNIX_START_DATE,
                            ORIG_LAT, ORIG_LONG, ORIG_UNC,
                            STAY_LAT, STAY_LONG, STAY_UNC, STAY_DUR, STAY]]
-    df_output.to_csv(output_file, index=False)
-    return df_output
+    output_df.dropna(how="all")
+    output_df.to_csv(output_file, index=False)
+    return output_df

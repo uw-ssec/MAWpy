@@ -1,14 +1,8 @@
 import logging
-
-import psutil
-import time
 import pandas as pd
 
-from multiprocessing import Pool
-from multiprocessing import cpu_count
-
 from mawpy.constants import UNIX_START_T, USER_ID, STAY_DUR, STAY_LAT, STAY_LONG, STAY_UNC, STAY
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
+from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +33,13 @@ def _run_for_user(df_by_user: pd.DataFrame, duration_constraint: float, order_of
     return df_by_user
 
 
-def _run(args: tuple) -> pd.DataFrame:
-    df_by_user, dur_constraint = args
+def _run(df_by_user: pd.DataFrame, args: tuple) -> pd.DataFrame:
+    dur_constraint = args[0]
     df_by_user = _run_for_user(df_by_user, dur_constraint)
     return df_by_user
 
 
 def update_stay_duration(output_file: str, dur_constraint: float, input_df: pd.DataFrame | None, input_file: str = None) -> pd.DataFrame:
-    pool = Pool(cpu_count())
 
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
@@ -55,26 +48,8 @@ def update_stay_duration(output_file: str, dur_constraint: float, input_df: pd.D
         input_df = get_preprocessed_dataframe(input_file)
 
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
-
-    chunk_count = 0
-    tasks = []
-    for each_chunk in user_id_chunks:
-        chunk_count += 1
-        logger.info(
-            f"Start processing bulk: {chunk_count} at "
-            f"time: {time.strftime('%m%d-%H:%M')} memory: "
-            f"{psutil.virtual_memory().percent}"
-        )
-        task = pool.apply_async(_run,
-                                ((input_df[input_df[USER_ID].isin(each_chunk)], dur_constraint),))
-        tasks.append(task)
-
-    df_output_list = [t.get().reset_index(drop=True) for t in tasks]
-
-    pool.close()
-    pool.join()
-    df_output = pd.concat(df_output_list)
-
-    df_output.dropna(how="all")
-    df_output.to_csv(output_file, index=False)
-    return df_output
+    args = (dur_constraint, )
+    output_df = execute_parallel(user_id_chunks, input_df, _run, args)
+    output_df.dropna(how="all")
+    output_df.to_csv(output_file, index=False)
+    return output_df

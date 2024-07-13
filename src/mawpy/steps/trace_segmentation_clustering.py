@@ -1,16 +1,13 @@
 import logging
-import time
-from multiprocessing import Pool, cpu_count
 
 import numpy as np
 import pandas as pd
-import psutil
 
 from mawpy.constants import (USER_ID, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, UNIX_START_T,
                              STAY_LAT, STAY_LONG, STAY_DUR, STAY)
 from mawpy.distance import distance
 from mawpy.utilities.common import get_combined_stay, get_stay_groups
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column
+from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +63,7 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
     while start < end < number_of_traces_for_day:
         has_exceeded, exceed_index = _get_diameter_constraint_exceed_index(start, end, latitudes_for_day, longitudes_for_day,
                                                              spatial_constraint)
-        if group_found is False:
+        if not group_found:
 
             if has_exceeded:
                 start = exceed_index + 1
@@ -78,7 +75,6 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
                 group_found = True
             end += 1
         else:
-
             if has_exceeded:
                 stay_lat[start: end] = np.mean(latitudes_for_day[start: end])
                 stay_long[start: end] = np.mean(longitudes_for_day[start: end])
@@ -105,8 +101,8 @@ def _run_for_user(df_by_user: pd.DataFrame, spatial_constraint: float, dur_const
     return df_with_stay_added
 
 
-def _run(args: tuple) -> pd.DataFrame:
-    df_by_user_chunk, spatial_constraint, dur_constraint = args
+def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
+    spatial_constraint, dur_constraint = args
     df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
                         .apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint)))
     return df_by_user_chunk
@@ -115,31 +111,12 @@ def _run(args: tuple) -> pd.DataFrame:
 def trace_segmentation_clustering(input_file: str, output_file: str, spatial_constraint: float,
                                   dur_constraint: float) -> pd.DataFrame:
 
-    pool = Pool(cpu_count())
 
     input_df = get_preprocessed_dataframe(input_file)
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
     # input_df.set_index(keys=[USER_ID], inplace=True)
-
-    chunk_count = 0
-    tasks = []
-    for each_chunk in user_id_chunks:
-        chunk_count += 1
-        logger.info(
-            f"Start processing bulk: {chunk_count} at "
-            f"time: {time.strftime('%m%d-%H:%M')} memory: "
-            f"{psutil.virtual_memory().percent}"
-        )
-
-        task = pool.apply_async(_run,
-                                ((input_df[input_df[USER_ID].isin(each_chunk)], spatial_constraint, dur_constraint),))
-        tasks.append(task)
-
-    df_output_list = [t.get().reset_index(drop=True) for t in tasks]
-    pool.close()
-    pool.join()
-
-    df_output = pd.concat(df_output_list)
-    df_output.dropna(how="all")
-    df_output.to_csv(output_file, index=False)
-    return df_output
+    args = (spatial_constraint, dur_constraint)
+    output_df = execute_parallel(user_id_chunks, input_df, _run, args)
+    output_df.dropna(how="all")
+    output_df.to_csv(output_file, index=False)
+    return output_df
