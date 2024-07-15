@@ -30,6 +30,7 @@ def get_list_of_chunks_by_column(df: pd.DataFrame, column_for_chunking: str, in_
 
 def get_preprocessed_dataframe(input_file_path: str) -> pd.DataFrame:
     input_df = pd.read_csv(input_file_path)
+    input_df.columns = map(str.strip, map(str.lower, input_df.columns))
     input_df[UNIX_START_DATE] = (
         input_df[UNIX_START_T]
             .astype('datetime64[s]')

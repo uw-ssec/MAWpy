@@ -1,4 +1,4 @@
-USER_ID = 'user_ID'
+USER_ID = 'user_id'
 STAY = 'stay'
 STAY_DUR = 'stay_dur'
 STAY_LAT = 'stay_lat'
