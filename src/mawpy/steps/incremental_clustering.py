@@ -190,14 +190,14 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
     """
     df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
-    if dur_constr:  # cluster locations of stays to obtain aggregated stayes
+    if dur_constr:  # cluster locations of stays to obtain aggregated stay
         # get unique GPS stay points if stay duration is greater than duration constraint
 
         stay_lat_long_df = df_by_user.loc[df_by_user[STAY_DUR] >= dur_constr, [STAY_LAT, STAY_LONG]]
         # Convert to list of tuples
         locations_for_clustering = list(set(zip(stay_lat_long_df[STAY_LAT], stay_lat_long_df[STAY_LONG])))
-    else:  # cluster original locations (orig_lat and orgi_long) to obtain stays
-        # get GPS original points
+    else:  # cluster original locations (orig_lat and orig_long) to obtain stays
+        # get original points
         orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
         # Convert to list of tuples
         locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
@@ -205,7 +205,6 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
         return df_by_user
 
     clusters_list = _get_clusters(locations_for_clustering, spat_constr)
-    # make Ccurrent as Cnew
 
     ### apply k means clustering with k same as length of L
     clusters_list = _k_means_cluster_lloyd(
