@@ -195,12 +195,12 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 
         stay_lat_long_df = df_by_user.loc[df_by_user[STAY_DUR] >= dur_constr, [STAY_LAT, STAY_LONG]]
         # Convert to list of tuples
-        locations_for_clustering = list(zip(stay_lat_long_df[STAY_LAT], stay_lat_long_df[STAY_LONG]))
+        locations_for_clustering = list(set(zip(stay_lat_long_df[STAY_LAT], stay_lat_long_df[STAY_LONG])))
     else:  # cluster original locations (orig_lat and orgi_long) to obtain stays
         # get GPS original points
         orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
         # Convert to list of tuples
-        locations_for_clustering = list(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG]))
+        locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
     if len(locations_for_clustering) == 0:
         return df_by_user
 
