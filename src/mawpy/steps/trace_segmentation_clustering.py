@@ -108,11 +108,16 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
     return df_by_user_chunk
 
 
-def trace_segmentation_clustering(input_file: str, output_file: str, spatial_constraint: float,
-                                  dur_constraint: float) -> pd.DataFrame:
+def trace_segmentation_clustering(output_file: str, spatial_constraint: float, dur_constraint: float,
+                                  input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
 
+    if input_df is None and input_file is None:
+        logger.error("At least one of input file path or input dataframe is required")
+        return None
 
-    input_df = get_preprocessed_dataframe(input_file)
+    if input_df is None:
+        input_df = get_preprocessed_dataframe(input_file)
+
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
     # input_df.set_index(keys=[USER_ID], inplace=True)
     args = (spatial_constraint, dur_constraint)

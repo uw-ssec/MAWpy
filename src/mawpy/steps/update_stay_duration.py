@@ -34,15 +34,19 @@ def _run_for_user(df_by_user: pd.DataFrame, duration_constraint: float, order_of
 
 
 def _run(df_by_user: pd.DataFrame, args: tuple) -> pd.DataFrame:
+
+    assert len(args) == 1, "Expected a single dur_constraint argument"
     dur_constraint = args[0]
     df_by_user = _run_for_user(df_by_user, dur_constraint)
     return df_by_user
 
 
-def update_stay_duration(output_file: str, dur_constraint: float, input_df: pd.DataFrame | None, input_file: str = None) -> pd.DataFrame:
+def update_stay_duration(output_file: str, dur_constraint: float,
+                         input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
 
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
+        return None
 
     if input_df is None:
         input_df = get_preprocessed_dataframe(input_file)

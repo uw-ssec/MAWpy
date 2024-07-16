@@ -242,9 +242,12 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
 
 
 def incremental_clustering(output_file: str, spatial_constraint: float,
-                           dur_constraint: float, input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame:
+                           dur_constraint: float,
+                           input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
+
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
+        return None
 
     if input_df is None:
         input_df = get_preprocessed_dataframe(input_file)

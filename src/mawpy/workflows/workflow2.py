@@ -26,7 +26,8 @@ def workflow2(
     duration_constraint1: float,
     duration_constraint2: float,
 ):
-    df_output = trace_segmentation_clustering(input_file, output_file, spatial_constraint, duration_constraint1)
+    df_output = trace_segmentation_clustering(output_file, spatial_constraint, duration_constraint1,
+                                              input_file=input_file)
     update_stay_duration(output_file, duration_constraint2, input_df=df_output)
 
 
