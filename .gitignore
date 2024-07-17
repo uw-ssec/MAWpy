@@ -117,3 +117,6 @@ node_modules/
 
 # Ruff Lint
 .ruff_cache/
+
+# Hatch Version
+version.py
