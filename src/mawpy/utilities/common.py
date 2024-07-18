@@ -45,9 +45,6 @@ def get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.Da
                          are merged.
     """
 
-    df_by_user[STAY_LAT] = pd.to_numeric(df_by_user[STAY_LAT])
-    df_by_user[STAY_LONG] = pd.to_numeric(df_by_user[STAY_LONG])
-
     # Calculate the average values for each group
     group_avgs = df_by_user.groupby(STAY)[STAY_LAT_LONG].mean().reset_index()
 
