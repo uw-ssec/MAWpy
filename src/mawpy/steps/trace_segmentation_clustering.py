@@ -40,9 +40,7 @@ def _does_duration_threshold_exceed(point_i: int, point_j: int, timestamps_list:
     """
         Checks if the observed time difference between point j and point i is greater than duration_constraint.
     """
-    if int(timestamps_list[point_j]) - int(timestamps_list[point_i]) > duration_constraint:
-        return True
-    return False
+    return timestamps_list[point_j] - timestamps_list[point_i] >= duration_constraint
 
 
 def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur_constraint: float) -> pd.DataFrame:
@@ -58,9 +56,10 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
     longitudes_for_day = each_day_df[ORIG_LONG].to_numpy()
     timestamps_for_day = each_day_df[UNIX_START_T].to_numpy()
     number_of_traces_for_day = len(each_day_df)
-    stay_lat = np.full(number_of_traces_for_day, -1.0)
-    stay_long = np.full(number_of_traces_for_day, -1.0)
-    stay_dur = np.full(number_of_traces_for_day, -1)
+
+    stay_lat = latitudes_for_day.copy()
+    stay_long = longitudes_for_day.copy()
+    stay_dur = np.zeros(number_of_traces_for_day)
 
     start = 0
     end = start + 1
@@ -82,14 +81,19 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
             end += 1
         else:
             if has_exceeded:
-                stay_lat[start: end] = np.mean(latitudes_for_day[start: end])
-                stay_long[start: end] = np.mean(longitudes_for_day[start: end])
+                stay_lat[start: end] = np.mean(latitudes_for_day[start: end], dtype=float)
+                stay_long[start: end] = np.mean(longitudes_for_day[start: end], dtype=float)
                 stay_dur[start: end] = timestamps_for_day[end - 1] - timestamps_for_day[start]
                 start = end
                 end = start + 1
                 group_found = False
             else:
                 end += 1
+
+    if group_found:
+        stay_lat[start: end] = np.mean(latitudes_for_day[start: end], dtype=float)
+        stay_long[start: end] = np.mean(longitudes_for_day[start: end], dtype=float)
+        stay_dur[start: end] = timestamps_for_day[end - 1] - timestamps_for_day[start]
 
     each_day_df[STAY_LAT] = stay_lat
     each_day_df[STAY_LONG] = stay_long
