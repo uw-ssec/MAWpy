@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
 parser.add_argument("output_file", help="the CSV file to write the output to.")
-parser.add_argument('--spatial_constraint', default=1, type=float, required=False)
+parser.add_argument('--spatial_constraint', default=1.0, type=float, required=False)
 parser.add_argument('--duration_constraint_1',
                     help="This should be set to 0 if using Incremental Clustering as the first step in the workflow",
                     default=0, type=float, required=False)
