@@ -26,10 +26,13 @@ def _get_diameter_constraint_exceed_index(starting_index: int, point_to_check: i
     distance_map = {}
     for i in range(starting_index, point_to_check):
         point_key = (latitudes_list[i], longitudes_list[i])
-        if point_key not in distance_map:
-            distance_map[point_key] = distance(latitudes_list[i], longitudes_list[i],
+
+        distance_for_point = distance_map.get(point_key, -1)
+        if distance_for_point == -1:
+            distance_for_point = distance(latitudes_list[i], longitudes_list[i],
                                                latitudes_list[point_to_check], longitudes_list[point_to_check])
-        if spatial_constraint < distance_map[point_key]:
+            distance_map[point_key] = distance_for_point
+        if spatial_constraint < distance_for_point:
             return True, i
 
     return False, -1
