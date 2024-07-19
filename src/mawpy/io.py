@@ -6,7 +6,6 @@ from typing import Callable
 supported_files = {
     ".csv": pd.read_csv,
     ".xlsx": pd.read_excel,
-    ".xls": pd.read_excel,
 }
 
 
