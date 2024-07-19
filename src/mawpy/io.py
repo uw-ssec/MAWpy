@@ -40,17 +40,42 @@ def _import_func(fqp: str):
 
 
 def _get_pandas_reader(file_path: str) -> Callable:
+    """
+    Takes an input file path and returns
+    the appropriate pandas reader function from
+    the ``supported_files`` dictionary
+
+    Parameters
+    ----------
+    file_path : str
+        The path file string
+
+    Returns
+    -------
+    Callable
+        The pandas reader function
+
+    Raises
+    ------
+    NotImplementedError
+        If the file extension is not supported
+    """
+    # Get the file base name, e.g. ``file.csv``
+    # and extract the extension, e.g. ``.csv``
     file_name = os.path.basename(file_path)
     _, ext = os.path.splitext(file_name)
     try:
+        # Get the proper supported file format dictionary
         format_dict = next(
             format_dict
             for format_dict in supported_files.values()
             if format_dict.get(EXTENSION) == ext
         )
         pd_class = format_dict.get(FUNCTION)
+        # Import the pandas reader function and return it
         return _import_func(pd_class)
     except StopIteration:
+        # If the extension is not supported, raise an error
         supported_extensions = [
             format_dict.get(EXTENSION) for format_dict in supported_files.values()
         ]
