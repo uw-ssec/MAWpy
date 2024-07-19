@@ -12,7 +12,6 @@ from mawpy.workflows.workflow1 import workflow1
 
 
 def test_workflow1_ic_usd():
-    print(os.getcwd())
     with TemporaryDirectory() as tempdir:
         input_file = os.path.dirname(__file__) + '/../resources/test_input.csv'
         output_file = os.path.join(tempdir, 'test_output_workflow1.csv')
@@ -55,6 +54,3 @@ def test_workflow1_ic_usd():
 
         # Check if output file was written successfully
         assert os.path.exists(args.output_file)
-
-        # Destroy test output file after test completed
-        os.remove(args.output_file)
