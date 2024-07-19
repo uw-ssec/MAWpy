@@ -14,3 +14,13 @@ UNIX_START_T = 'unix_start_t'
 UNIX_START_DATE = 'unix_start_date'
 
 STAY_LAT_LONG = [STAY_LAT, STAY_LONG]
+
+IC_COLUMNS = [USER_ID, UNIX_START_T, UNIX_START_DATE,
+              ORIG_LAT, ORIG_LONG, ORIG_UNC,
+              STAY_LAT, STAY_LONG, STAY_UNC,
+              STAY_DUR, STAY]
+
+TSC_COLUMNS = [USER_ID, UNIX_START_T, UNIX_START_DATE,
+               ORIG_LAT, ORIG_LONG, ORIG_UNC,
+               STAY_LAT, STAY_LONG,
+               STAY_DUR, STAY]

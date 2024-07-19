@@ -9,7 +9,10 @@ def _mean_ignore_minus_ones(series: pd.Series) -> float:
     """
         Calculates the mean of the column without considering -1 entries in the column
     """
-    return series[series != -1].mean()
+    series_excluding_minus_one = series[series != -1]
+    if len(series_excluding_minus_one) == 0:
+        return -1
+    return series_excluding_minus_one.mean()
 
 
 def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFrame, group_avgs: pd.DataFrame,
@@ -44,9 +47,6 @@ def get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.Da
                         and distance between them is less than threshold, then this_stay, next_stay, next_to_next_stay
                          are merged.
     """
-
-    df_by_user[STAY_LAT] = pd.to_numeric(df_by_user[STAY_LAT])
-    df_by_user[STAY_LONG] = pd.to_numeric(df_by_user[STAY_LONG])
 
     # Calculate the average values for each group
     group_avgs = df_by_user.groupby(STAY)[STAY_LAT_LONG].mean().reset_index()

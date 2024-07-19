@@ -17,7 +17,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 from mawpy.constants import (USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, STAY_UNC, ORIG_LONG, ORIG_UNC, STAY,
-                             UNIX_START_T, UNIX_START_DATE)
+                             UNIX_START_T, IC_COLUMNS)
 from mawpy.distance import distance
 from mawpy.utilities.common import get_combined_stay, get_stay_groups
 from mawpy.utilities.cluster import Cluster
@@ -255,9 +255,9 @@ def incremental_clustering(output_file: str, spatial_constraint: float,
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
     args = (spatial_constraint, dur_constraint)
     output_df = execute_parallel(user_id_chunks, input_df, _run, args)
-    output_df = output_df[[USER_ID, UNIX_START_T, UNIX_START_DATE,
-                           ORIG_LAT, ORIG_LONG, ORIG_UNC,
-                           STAY_LAT, STAY_LONG, STAY_UNC, STAY_DUR, STAY]]
+
+    output_columns = list(set(IC_COLUMNS) & set(output_df.columns))
+    output_df = output_df[output_columns]
     output_df.dropna(how="all")
     output_df.to_csv(output_file, index=False)
     return output_df
