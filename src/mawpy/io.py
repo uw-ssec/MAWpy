@@ -1,42 +1,13 @@
 import fsspec
 import os
 import pandas as pd
-import importlib
 from typing import Callable
 
-FUNCTION = "func"
-EXTENSION = "ext"
-
 supported_files = {
-    "csv": {FUNCTION: "pandas.read_csv", EXTENSION: ".csv"},
-    "excel": {FUNCTION: "pandas.read_excel", EXTENSION: ".xlsx"},
+    ".csv": pd.read_csv,
+    ".xlsx": pd.read_excel,
+    ".xls": pd.read_excel,
 }
-
-
-def _import_func(fqp: str):
-    """Take a fully-qualified path and return the imported function.
-
-    ``fqp`` is of the form "package.module.func" or
-    "package.module:subobject.func".
-
-    Warnings
-    --------
-    This can import arbitrary modules. Make sure you haven't installed any modules
-    that may execute malicious code at import time.
-    """
-    if ":" in fqp:
-        mod, name = fqp.rsplit(":", 1)
-    else:
-        mod, name = fqp.rsplit(".", 1)
-
-    mod = importlib.import_module(mod)
-    for part in name.split("."):
-        mod = getattr(mod, part)
-
-    if not isinstance(mod, Callable):
-        raise TypeError(f"{fqp} is not a function")
-
-    return mod
 
 
 def _get_pandas_reader(file_path: str) -> Callable:
@@ -64,25 +35,18 @@ def _get_pandas_reader(file_path: str) -> Callable:
     # and extract the extension, e.g. ``.csv``
     file_name = os.path.basename(file_path)
     _, ext = os.path.splitext(file_name)
-    try:
-        # Get the proper supported file format dictionary
-        format_dict = next(
-            format_dict
-            for format_dict in supported_files.values()
-            if format_dict.get(EXTENSION) == ext
-        )
-        pd_class = format_dict.get(FUNCTION)
-        # Import the pandas reader function and return it
-        return _import_func(pd_class)
-    except StopIteration:
+
+    # The read function from the supported_files dictionary
+    read_func = supported_files.get(ext, None)
+
+    if read_func is None:
         # If the extension is not supported, raise an error
-        supported_extensions = [
-            format_dict.get(EXTENSION) for format_dict in supported_files.values()
-        ]
         raise NotImplementedError(
             f"File extension '{ext}' is not supported. "
-            f"Supported extensions are: {','.join(supported_extensions)}"
+            f"Supported extensions are: {','.join(list(supported_files.keys()))}"
         )
+
+    return read_func
 
 
 def open_file(
