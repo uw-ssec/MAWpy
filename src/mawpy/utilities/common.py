@@ -9,7 +9,10 @@ def _mean_ignore_minus_ones(series: pd.Series) -> float:
     """
         Calculates the mean of the column without considering -1 entries in the column
     """
-    return series[series != -1].mean()
+    series_excluding_minus_one = series[series != -1]
+    if len(series_excluding_minus_one) == 0:
+        return -1
+    return series_excluding_minus_one.mean()
 
 
 def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFrame, group_avgs: pd.DataFrame,
