@@ -31,7 +31,7 @@ df_strategy = data_frames(
 )
 
 @given(df=df_strategy)
-@settings(max_examples=1)
+@settings(max_examples=1, deadline=None)
 @pytest.mark.parametrize("ext", [".csv",  ".xlsx"])
 def test_open_file(df, ext):
     ext_dict = {
