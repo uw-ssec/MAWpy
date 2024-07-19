@@ -31,6 +31,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pre-commit>=3.6.1",
     "nox>=2024.3.2",
+    "hypothesis>=6.108.2,<6.109"
 ]
 docs = [
     "jupyter-book",
