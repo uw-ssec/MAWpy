@@ -25,7 +25,7 @@ def _run_for_user(df_by_user_date: pd.DataFrame, duration_constraint: float, ord
     if order_of_execution == 1:
         df_by_user_date[STAY_DUR] = -1
 
-    df_by_user_stay = df_by_user_date.groupby(STAY).apply(lambda x: _get_stay_duration_for_group(x))
+    df_by_user_stay = df_by_user_date.groupby([STAY, USER_ID]).apply(lambda x: _get_stay_duration_for_group(x))
     df_by_user_stay.loc[df_by_user_stay[STAY_LAT] == -1, STAY_DUR] = -1
     df_by_user_stay.loc[df_by_user_stay[STAY_DUR] < duration_constraint, [STAY_LAT, STAY_LONG, STAY_UNC, STAY_DUR]] = (
         -1, -1, -1, -1)
