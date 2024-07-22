@@ -26,17 +26,22 @@ from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_o
 logger = logging.getLogger(__name__)
 
 
-def _get_cluster_center(row: pd.Series, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
+def _get_cluster_center(row: pd.Series, df_columns: list, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
     """
     Returns the lat and long of the cluster to which the trace(row) belongs.
     """
     if dur_constr:
         lat_long = (row[STAY_LAT], row[STAY_LONG])
-        unc = row[STAY_UNC]
+        if STAY_UNC in df_columns:
+            unc = row[STAY_UNC]
+        else:
+            unc = -1
     else:
         lat_long = (row[ORIG_LAT], row[ORIG_LONG])
-        unc = row[ORIG_UNC]
-
+        if ORIG_UNC in df_columns:
+            unc = row[ORIG_UNC]
+        else:
+            unc = -1
     if lat_long in mapping:
         cluster_lat, cluster_long, cluster_radius = mapping[lat_long]
         return cluster_lat, cluster_long, max(unc, cluster_radius)
@@ -184,23 +189,49 @@ def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     return locations_to_cluster_center_map
 
 
-def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
+def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constraint: float) -> pd.DataFrame:
+    """
+    Filters a DataFrame based on a stay duration constraint.
+
+    This function calculates the duration of stays for each stay in the DataFrame,
+    and filters out stays that do not meet the specified duration constraint.
+
+    Parameters:
+    - df_by_user: pd.DataFrame
+        The input DataFrame containing stay information.
+    - duration_constraint: int
+        The minimum duration required to keep a stay.
+
+    Returns:
+    - pd.DataFrame
+        The filtered DataFrame containing only the stays with stay durations greater than the duration constraint.
+    """
+    # Calculate the minimum and maximum UNIX_START_T for each STAY group
+    stay_duration = df_by_user.groupby(STAY)[UNIX_START_T].agg(['min', 'max'])
+
+    # Calculate the duration for each group
+    stay_duration[STAY_DUR] = stay_duration['max'] - stay_duration['min']
+
+    # Identify the stays that meet the duration constraint
+    filtered_groups = stay_duration[stay_duration[STAY_DUR] > duration_constraint].index
+
+    # Filter the original DataFrame based on the identified stays
+    df_by_user = df_by_user[df_by_user[STAY].isin(filtered_groups)]
+
+    return df_by_user
+
+
+def _run_for_user(df_by_user: pd.DataFrame, df_columns: list,
+                  spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
     df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
-    if dur_constr:  # cluster locations of stays to obtain aggregated stayes
-        # get unique GPS stay points if stay duration is greater than duration constraint
-
-        stay_lat_long_df = df_by_user.loc[df_by_user[STAY_DUR] >= dur_constr, [STAY_LAT, STAY_LONG]]
-        # Convert to list of tuples
-        locations_for_clustering = list(set(zip(stay_lat_long_df[STAY_LAT], stay_lat_long_df[STAY_LONG])))
-    else:  # cluster original locations (orig_lat and orgi_long) to obtain stays
-        # get GPS original points
-        orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
-        # Convert to list of tuples
-        locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
+    # cluster original locations (orig_lat and orgi_long) to obtain stays.
+    orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
+    # Convert to list of tuples
+    locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
     if len(locations_for_clustering) == 0:
         return df_by_user
 
@@ -218,11 +249,14 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 
     ### Update trace itself using clustre center and max(radius, uncertainty)
     df_by_user[[STAY_LAT, STAY_LONG, STAY_UNC]] = df_by_user.apply(
-        lambda row: _get_cluster_center(row, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
+        lambda row: _get_cluster_center(row, df_columns, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
 
     df_by_user[STAY] = get_stay_groups(df_by_user)
 
     df_by_user = get_combined_stay(df_by_user)
+
+    if dur_constr is not None:
+        df_by_user = _filter_by_durations_constraint(df_by_user, dur_constr)
 
     return df_by_user
 
@@ -230,13 +264,14 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
     spatial_constraint, dur_constraint = args
 
+    df_columns = df_by_user_chunk.columns
     if dur_constraint <= 0 or dur_constraint is None:
         df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
-                            .apply(lambda x: _run_for_user(x, spatial_constraint)))
+                            .apply(lambda x: _run_for_user(x, df_columns, spatial_constraint)))
 
     else:
         df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
-                            .apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint)))
+                            .apply(lambda x: _run_for_user(x, df_columns, spatial_constraint, dur_constraint)))
 
     return df_by_user_chunk
 
