@@ -42,7 +42,7 @@ def test_open_file(df, ext, tmp_path):
         ".csv": "to_csv",
         ".xlsx": "to_excel"
     }
-    filename = str((d / (".test" + ext)).resolve())
+    filename = str((d / f".test{ext}").resolve())
 
     # Convert UUID to simple string
     df.loc[:, USER_ID] = df[USER_ID].astype(str)
