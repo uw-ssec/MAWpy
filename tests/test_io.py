@@ -33,12 +33,16 @@ df_strategy = data_frames(
 @given(df=df_strategy)
 @settings(max_examples=1, deadline=None)
 @pytest.mark.parametrize("ext", [".csv",  ".xlsx"])
-def test_open_file(df, ext):
+def test_open_file(df, ext, tmp_path):
+    # Setup tempdir for file
+    d = tmp_path / "mawpy-io-test"
+    d.mkdir()
+
     ext_dict = {
         ".csv": "to_csv",
         ".xlsx": "to_excel"
     }
-    filename = ".test" + ext
+    filename = str((d / (".test" + ext)).resolve())
 
     # Convert UUID to simple string
     df.loc[:, USER_ID] = df[USER_ID].astype(str)
@@ -56,6 +60,3 @@ def test_open_file(df, ext):
 
     # Check that the file_df is equal to the original DataFrame
     assert_frame_equal(df, file_df, check_dtype=False)
-
-    # Clean up the temp file
-    Path(filename).unlink()

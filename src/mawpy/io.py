@@ -36,7 +36,7 @@ def _get_pandas_reader(file_path: str) -> Callable:
     _, ext = os.path.splitext(file_name)
 
     # The read function from the supported_files dictionary
-    read_func = supported_files.get(ext, None)
+    read_func = supported_files.get(ext)
 
     if read_func is None:
         # If the extension is not supported, raise an error
