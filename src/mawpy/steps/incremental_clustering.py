@@ -184,23 +184,48 @@ def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     return locations_to_cluster_center_map
 
 
+def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constraint: float):
+    """
+    Filters a DataFrame based on a stay duration constraint.
+
+    This function calculates the duration of stays for each stay in the DataFrame,
+    and filters out stays that do not meet the specified duration constraint.
+
+    Parameters:
+    - df_by_user: pd.DataFrame
+        The input DataFrame containing stay information.
+    - duration_constraint: int
+        The minimum duration required to keep a stay.
+
+    Returns:
+    - pd.DataFrame
+        The filtered DataFrame containing only the stays with stay durations greater than the duration constraint.
+    """
+    # Calculate the minimum and maximum UNIX_START_T for each STAY group
+    stay_duration = df_by_user.groupby(STAY)[UNIX_START_T].agg(['min', 'max'])
+
+    # Calculate the duration for each group
+    stay_duration[STAY_DUR] = stay_duration['max'] - stay_duration['min']
+
+    # Identify the stays that meet the duration constraint
+    filtered_groups = stay_duration[stay_duration[STAY_DUR] > duration_constraint].index
+
+    # Filter the original DataFrame based on the identified stays
+    df_by_user = df_by_user[df_by_user[STAY].isin(filtered_groups)]
+
+    return df_by_user
+
+
 def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
     df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
-    if dur_constr:  # cluster locations of stays to obtain aggregated stayes
-        # get unique GPS stay points if stay duration is greater than duration constraint
-
-        stay_lat_long_df = df_by_user.loc[df_by_user[STAY_DUR] >= dur_constr, [STAY_LAT, STAY_LONG]]
-        # Convert to list of tuples
-        locations_for_clustering = list(set(zip(stay_lat_long_df[STAY_LAT], stay_lat_long_df[STAY_LONG])))
-    else:  # cluster original locations (orig_lat and orgi_long) to obtain stays
-        # get GPS original points
-        orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
-        # Convert to list of tuples
-        locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
+    # cluster original locations (orig_lat and orgi_long) to obtain stays.
+    orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
+    # Convert to list of tuples
+    locations_for_clustering = list(set(zip(orig_lat_long_df[ORIG_LAT], orig_lat_long_df[ORIG_LONG])))
     if len(locations_for_clustering) == 0:
         return df_by_user
 
@@ -223,6 +248,9 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
     df_by_user[STAY] = get_stay_groups(df_by_user)
 
     df_by_user = get_combined_stay(df_by_user)
+
+    if dur_constr is not None:
+        df_by_user = _filter_by_durations_constraint(df_by_user, dur_constr)
 
     return df_by_user
 
