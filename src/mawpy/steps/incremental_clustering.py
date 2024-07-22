@@ -26,17 +26,22 @@ from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_o
 logger = logging.getLogger(__name__)
 
 
-def _get_cluster_center(row: pd.Series, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
+def _get_cluster_center(row: pd.Series, df_columns: list, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
     """
     Returns the lat and long of the cluster to which the trace(row) belongs.
     """
     if dur_constr:
         lat_long = (row[STAY_LAT], row[STAY_LONG])
-        unc = row[STAY_UNC]
+        if STAY_UNC in df_columns:
+            unc = row[STAY_UNC]
+        else:
+            unc = -1
     else:
         lat_long = (row[ORIG_LAT], row[ORIG_LONG])
-        unc = row[ORIG_UNC]
-
+        if ORIG_UNC in df_columns:
+            unc = row[ORIG_UNC]
+        else:
+            unc = -1
     if lat_long in mapping:
         cluster_lat, cluster_long, cluster_radius = mapping[lat_long]
         return cluster_lat, cluster_long, max(unc, cluster_radius)
@@ -216,7 +221,8 @@ def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constrain
     return df_by_user
 
 
-def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
+def _run_for_user(df_by_user: pd.DataFrame, df_columns: list,
+                  spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
     """
         Function to perform incremental clustering on a dataframe containing traces for a single user
     """
@@ -243,7 +249,7 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 
     ### Update trace itself using clustre center and max(radius, uncertainty)
     df_by_user[[STAY_LAT, STAY_LONG, STAY_UNC]] = df_by_user.apply(
-        lambda row: _get_cluster_center(row, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
+        lambda row: _get_cluster_center(row, df_columns, locations_to_cluster_center_map, dur_constr), axis=1, result_type='expand')
 
     df_by_user[STAY] = get_stay_groups(df_by_user)
 
@@ -258,13 +264,14 @@ def _run_for_user(df_by_user: pd.DataFrame, spat_constr: float, dur_constr: floa
 def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
     spatial_constraint, dur_constraint = args
 
+    df_columns = df_by_user_chunk.columns
     if dur_constraint <= 0 or dur_constraint is None:
         df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
-                            .apply(lambda x: _run_for_user(x, spatial_constraint)))
+                            .apply(lambda x: _run_for_user(x, df_columns, spatial_constraint)))
 
     else:
         df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
-                            .apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint)))
+                            .apply(lambda x: _run_for_user(x, df_columns, spatial_constraint, dur_constraint)))
 
     return df_by_user_chunk
 
