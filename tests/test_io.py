@@ -36,7 +36,7 @@ df_strategy = data_frames(
 def test_open_file(df, ext, tmp_path):
     # Setup tempdir for file
     d = tmp_path / "mawpy-io-test"
-    d.mkdir()
+    d.mkdir(exists_ok=True)
 
     ext_dict = {
         ".csv": "to_csv",
