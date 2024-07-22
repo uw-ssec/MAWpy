@@ -184,7 +184,7 @@ def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     return locations_to_cluster_center_map
 
 
-def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constraint: float):
+def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constraint: float) -> pd.DataFrame:
     """
     Filters a DataFrame based on a stay duration constraint.
 
