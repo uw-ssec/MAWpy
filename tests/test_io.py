@@ -4,6 +4,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from hypothesis.extra.pandas import column, data_frames, range_indexes
 from hypothesis import given, settings
+import hypothesis
 import hypothesis.strategies as st
 import pytest
 from pathlib import Path
@@ -33,10 +34,9 @@ df_strategy = data_frames(
 @given(df=df_strategy)
 @settings(max_examples=1, deadline=None)
 @pytest.mark.parametrize("ext", [".csv",  ".xlsx"])
-def test_open_file(df, ext, tmp_path):
+def test_open_file(df, ext, tmp_path_factory):
     # Setup tempdir for file
-    d = tmp_path / "mawpy-io-test"
-    d.mkdir(exists_ok=True)
+    d = tmp_path_factory.mktemp("mawpy-io-test")
 
     ext_dict = {
         ".csv": "to_csv",
