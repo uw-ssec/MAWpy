@@ -9,7 +9,7 @@ from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_o
 logger = logging.getLogger(__name__)
 
 
-def _transform_trace(row: pd.Series, df_columns: list) -> pd.Series:
+def _transform_trace(row: pd.Series) -> pd.Series:
     """
     Transforms a row of the dataframe by determining the duration, latitude, longitude,
     and whether it's a stay point or not.
@@ -21,16 +21,16 @@ def _transform_trace(row: pd.Series, df_columns: list) -> pd.Series:
         pd.Series: Transformed row with duration, latitude, longitude, and stay/not stay indicator.
     """
     # Determine duration, defaulting to 1 if not present or stay_dur
-    duration = 1 if STAY_DUR not in df_columns or row[STAY_DUR] == -1 else row[STAY_DUR]
+    duration = 1 if STAY_DUR not in row or row[STAY_DUR] == -1 else row[STAY_DUR]
 
     # Determine latitude, defaulting to original if not present or stay_lat
-    lat = row[ORIG_LAT] if STAY_LAT not in df_columns or row[STAY_LAT] == -1 else row[STAY_LAT]
+    lat = row[ORIG_LAT] if STAY_LAT not in row or row[STAY_LAT] == -1 else row[STAY_LAT]
 
     # Determine longitude, defaulting to original if not present or stay_long
-    long = row[ORIG_LONG] if STAY_LONG not in df_columns or row[STAY_LONG] == -1 else row[STAY_LONG]
+    long = row[ORIG_LONG] if STAY_LONG not in row or row[STAY_LONG] == -1 else row[STAY_LONG]
 
     # Determine if it's a stay point, defaulting to 0 if not present or 1
-    stay_not = 0 if STAY_LAT not in df_columns or row[STAY_LAT] == -1 else 1
+    stay_not = 0 if STAY_LAT not in row or row[STAY_LAT] == -1 else 1
 
     return pd.Series([duration, lat, long, stay_not])
 
@@ -43,7 +43,7 @@ def _get_stays_by_lat_long_dur(df_by_user: pd.DataFrame) -> np.ndarray:
         df_by_user (pd.DataFrame): Dataframe filtered by user.
 
     Returns:
-        np.ndarray: Array of stay group indices.
+        np.ndarray: Array of stay group indices. shape: (n, )
     """
     lat = df_by_user['lat'].to_numpy()
     long = df_by_user['long'].to_numpy()
@@ -67,8 +67,8 @@ def _get_duration_by_unique_stay(lat_lon: np.array, dur: np.array) -> dict:
     Computes the total duration for each unique latitude and longitude pair.
 
     Args:
-        lat_lon (np.ndarray): Array of latitude and longitude pairs.
-        dur (np.ndarray): Array of durations corresponding to each pair.
+        lat_lon (np.ndarray): Array of latitude and longitude pairs with shape (n,2)
+        dur (np.ndarray): Array of durations corresponding to each pair. (n,)
 
     Returns:
         dict: Dictionary mapping latitude/longitude pairs to total duration.
@@ -94,10 +94,10 @@ def _get_oscillating_traces(lat_lon: np.array, dur: np.array, timestamp_list: np
     Identifies oscillating traces within a given time window.
 
     Args:
-        lat_lon (np.ndarray): Array of latitude and longitude pairs.
-        dur (np.ndarray): Array of durations corresponding to each pair.
-        timestamp_list (np.ndarray): Array of timestamps corresponding to each pair.
-        time_window (float): Time window for identifying oscillations.
+        lat_lon (np.ndarray): Array of latitude and longitude pairs. (n,2)
+        dur (np.ndarray): Array of durations corresponding to each pair. (n,)
+        timestamp_list (np.ndarray): Array of timestamps corresponding to each pair. (n,)
+        time_window (float): Time window for identifying oscillations. (n,)
 
     Returns:
         list: List of lists containing indices of oscillating traces.
@@ -134,6 +134,18 @@ def _get_oscillating_traces(lat_lon: np.array, dur: np.array, timestamp_list: np
 def _get_replacement_for_traces(lat_lon: np.array,
                                 stay_indicator: np.array, oscillating_traces: list,
                                 duration_by_unique_stay_dict: dict) -> np.array:
+    """
+        Determines replacement indices for oscillating traces based on stay indicators and duration.
+
+        Args:
+            lat_lon (np.ndarray): Array of latitude and longitude pairs with shape (n, 2).
+            stay_indicator (np.ndarray): Array of stay indicators with shape (n,).
+            oscillating_traces (list): List of lists containing indices of oscillating traces.
+            duration_by_unique_stay_dict (dict): Dictionary mapping latitude/longitude pairs to total duration.
+
+        Returns:
+            np.ndarray: Array of replacement indices with shape (n,).
+    """
 
     replacement_for_traces = np.full(len(lat_lon), -1)  # Dictionary to capture oscillation
     for trace_list in oscillating_traces:
@@ -149,7 +161,7 @@ def _get_replacement_for_traces(lat_lon: np.array,
     return replacement_for_traces
 
 
-def _run_for_user(df_by_user: pd.DataFrame, time_window: float, df_columns: list) -> pd.DataFrame:
+def _run_for_user(df_by_user: pd.DataFrame, time_window: float) -> pd.DataFrame:
     """
     Processes the dataframe for a single user to address oscillations in traces.
 
@@ -165,7 +177,7 @@ def _run_for_user(df_by_user: pd.DataFrame, time_window: float, df_columns: list
 
     # Apply transformation to add temporary columns
     temporary_columns = ['duration', 'lat', 'long', 'stay_not']
-    df_by_user[temporary_columns] = df_by_user.apply(lambda x: _transform_trace(x, df_columns), axis=1)
+    df_by_user[temporary_columns] = df_by_user.apply(lambda x: _transform_trace(x), axis=1)
 
     # Group stays by latitude, longitude, and duration
     temporary_columns.append('stay_group_by_dur')
@@ -185,7 +197,7 @@ def _run_for_user(df_by_user: pd.DataFrame, time_window: float, df_columns: list
                                                          oscillating_traces, duration_by_unique_stay_dict)
 
     orig_lat_lon = df_by_user[[ORIG_LAT, ORIG_LONG]].to_numpy()
-    if STAY_LAT not in df_columns or STAY_LONG not in df_columns:
+    if STAY_LAT not in df_by_user or STAY_LONG not in df_by_user:
         stay_lat_lon = [[-1, -1] for _ in range(len(orig_lat_lon))]
     else:
         stay_lat_lon = df_by_user[[STAY_LAT, STAY_LONG]].to_numpy()
@@ -218,8 +230,7 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
         pd.DataFrame: Processed dataframe.
     """
     dur_constraint = args[0]
-    df_columns = df_by_user_chunk.columns
-    df_by_user_chunk = df_by_user_chunk.groupby(USER_ID).apply(lambda x: _run_for_user(x, dur_constraint, df_columns))
+    df_by_user_chunk = df_by_user_chunk.groupby(USER_ID).apply(lambda x: _run_for_user(x, dur_constraint))
     return df_by_user_chunk
 
 
