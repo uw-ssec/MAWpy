@@ -5,9 +5,6 @@ import pandas as pd
 
 from mawpy.constants import (USER_ID, UNIX_START_T, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, ORIG_UNC, STAY_LAT, STAY_LONG,
                              STAY_UNC, STAY, STAY_DUR)
-from mawpy.steps.address_oscillation import address_oscillation
-from mawpy.steps.incremental_clustering import incremental_clustering
-from mawpy.steps.update_stay_duration import update_stay_duration
 from mawpy.workflows.ic_usd_ao_usd import ic_usd_ao_usd
 
 
@@ -33,19 +30,11 @@ def test_workflow_ic_usd_ao_usd(tmp_path):
 
     # Check if output file was created
     assert os.path.exists(output_file)
-
-    # Destroy test output file after test completed
-    os.remove(args.output_file)
-
-    # Check if the workflow steps were called with expected arguments
-    df_output_ic = incremental_clustering(output_file, args.spatial_constraint, args.duration_constraint_1,
-                                          input_file=input_file)
-    df_output_usd = update_stay_duration(output_file, args.duration_constraint_2, input_df=df_output_ic)
-    df_output_ao = address_oscillation(output_file, args.duration_constraint_3, input_df=df_output_usd)
-    expected_output_df = update_stay_duration(output_file, args.duration_constraint_4, input_df=df_output_ao)
+    expected_output_df = pd.read_csv(os.path.dirname(__file__)
+                                     + '/../resources/ic_usd_ao_usd_output_for_test_input.csv')
 
     # Assert if the expected_output_df equal to actual_output_df
-    pd.testing.assert_frame_equal(actual_output_df, expected_output_df)
+    pd.testing.assert_frame_equal(actual_output_df, expected_output_df, check_like=True)
 
     # List of columns expected in the actual_output_df
     expected_output_columns = [USER_ID, UNIX_START_T, UNIX_START_DATE,
