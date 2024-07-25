@@ -29,3 +29,8 @@ AO_COLUMNS = [USER_ID, UNIX_START_T, UNIX_START_DATE,
                ORIG_LAT, ORIG_LONG, ORIG_UNC,
                STAY_LAT, STAY_LONG, STAY_UNC,
                STAY_DUR, STAY]
+
+IC_USD_WIP_FILE_NAME = "ic_usd_wip.csv"
+TSC_USD_WIP_FILE_NAME = "tsc_usd_wip.csv"
+AO_IC_USD_WIP_FILE_NAME = "ao_ic_usd_wip.csv"
+IC_USD_AO_USD_WIP_FILE_NAME = "ic_usd_ao_usd_wip.csv"

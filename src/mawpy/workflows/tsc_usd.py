@@ -6,6 +6,7 @@ import multiprocessing
 
 import pandas as pd
 
+from mawpy.constants import TSC_USD_WIP_FILE_NAME
 from mawpy.steps.trace_segmentation_clustering import trace_segmentation_clustering
 from mawpy.steps.update_stay_duration import update_stay_duration
 import os
@@ -39,10 +40,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
-    tsc_usd(args.input_file, "output_file.csv", args.spatial_constraint,
+    tsc_usd(args.input_file, TSC_USD_WIP_FILE_NAME, args.spatial_constraint,
               args.duration_constraint_1, args.duration_constraint_2)
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
-    current_filename = "output_file.csv"
-    new_filename = args.output_file
-    os.rename(current_filename, new_filename)
+    os.rename(TSC_USD_WIP_FILE_NAME, args.output_file)

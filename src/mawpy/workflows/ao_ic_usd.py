@@ -6,6 +6,7 @@ import multiprocessing
 
 import pandas as pd
 
+from mawpy.constants import AO_IC_USD_WIP_FILE_NAME
 from mawpy.steps.address_oscillation import address_oscillation
 from mawpy.steps.incremental_clustering import incremental_clustering
 from mawpy.steps.update_stay_duration import update_stay_duration
@@ -42,10 +43,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
-    ao_ic_usd(args.input_file, "output_file.csv", args.spatial_constraint, args.duration_constraint_1,
+    ao_ic_usd(args.input_file, AO_IC_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,
               args.duration_constraint_2, args.duration_constraint_3)
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
-    current_filename = "output_file.csv"
-    new_filename = args.output_file
-    os.rename(current_filename, new_filename)
+    os.rename(AO_IC_USD_WIP_FILE_NAME, args.outout_file)
