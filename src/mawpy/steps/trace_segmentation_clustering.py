@@ -60,14 +60,14 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
     timestamps_for_day = each_day_df[UNIX_START_T].to_numpy()
     number_of_traces_for_day = len(each_day_df)
 
-    stay_lat = latitudes_for_day.copy()
-    stay_long = longitudes_for_day.copy()
+    stay_lat = np.full(number_of_traces_for_day, -1.0)
+    stay_long = np.full(number_of_traces_for_day, -1.0)
     stay_dur = np.zeros(number_of_traces_for_day)
 
     start = 0
-    end = start + 1
+    end = start
     group_found = False
-    while start < end < number_of_traces_for_day:
+    while start <= end < number_of_traces_for_day:
         has_exceeded, exceed_index = _get_diameter_constraint_exceed_index(start, end, latitudes_for_day,
                                                                            longitudes_for_day,
                                                                            spatial_constraint)
@@ -75,8 +75,6 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
 
             if has_exceeded:
                 start = exceed_index + 1
-                if start == end:
-                    end += 1
                 continue
 
             if _does_duration_threshold_exceed(start, end, timestamps_for_day, dur_constraint):
@@ -88,7 +86,6 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
                 stay_long[start: end] = np.mean(longitudes_for_day[start: end], dtype=float)
                 stay_dur[start: end] = timestamps_for_day[end - 1] - timestamps_for_day[start]
                 start = end
-                end = start + 1
                 group_found = False
             else:
                 end += 1
