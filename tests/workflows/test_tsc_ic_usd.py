@@ -5,31 +5,33 @@ import pandas as pd
 
 from mawpy.constants import (USER_ID, UNIX_START_T, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, ORIG_UNC, STAY_LAT, STAY_LONG,
                              STAY, STAY_DUR)
-from mawpy.workflows.tsc_usd import tsc_usd
+from mawpy.workflows.tsc_ic_usd import tsc_ic_usd
 
 
-def test_tsc_usd(tmp_path):
+def test_tsc_ic_usd(tmp_path):
 
     input_file = os.path.dirname(__file__) + '/../resources/test_input.csv'
-    output_file = os.path.join(tmp_path, 'test_output_workflow_tsc_usd.csv')
+    output_file = os.path.join(tmp_path, 'test_output_workflow_tsc_ic_usd.csv')
     # Prepare arguments similar to command-line arguments
     args = Namespace(
         input_file=input_file,
         output_file=output_file,
-        spatial_constraint=1,
-        duration_constraint_1=0,
-        duration_constraint_2=300
+        spatial_constraint_1=1,
+        spatial_constraint_2=1,
+        duration_constraint_1=300,
+        duration_constraint_2=0,
+        duration_constraint_3=300
     )
 
     # Run the workflow to be tested and get the output
-    actual_output_df = tsc_usd(args.input_file, args.output_file, args.spatial_constraint,
-                                 args.duration_constraint_1, args.duration_constraint_2)
+    actual_output_df = tsc_ic_usd(args.input_file, args.output_file,
+                                  args.spatial_constraint_1, args.spatial_constraint_2,
+                                  args.duration_constraint_1, args.duration_constraint_2, args.duration_constraint_3)
 
     # Check if output file was created
     assert os.path.exists(output_file)
-
     expected_output_df = pd.read_csv(os.path.dirname(__file__)
-                                     + '/../resources/tsc_usd_output_for_test_input.csv')
+                                     + '/../resources/tsc_ic_usd_output_for_test_input.csv')
 
     # Assert if the expected_output_df equal to actual_output_df
     pd.testing.assert_frame_equal(actual_output_df, expected_output_df, check_like=True)
