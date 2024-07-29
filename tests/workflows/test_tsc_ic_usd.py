@@ -9,24 +9,11 @@ from mawpy.workflows.tsc_ic_usd import tsc_ic_usd
 
 
 def test_tsc_ic_usd(tmp_path):
-
     input_file = os.path.dirname(__file__) + '/../resources/test_input.csv'
     output_file = os.path.join(tmp_path, 'test_output_workflow_tsc_ic_usd.csv')
-    # Prepare arguments similar to command-line arguments
-    args = Namespace(
-        input_file=input_file,
-        output_file=output_file,
-        spatial_constraint_1=1,
-        spatial_constraint_2=1,
-        duration_constraint_1=300,
-        duration_constraint_2=0,
-        duration_constraint_3=300
-    )
 
     # Run the workflow to be tested and get the output
-    actual_output_df = tsc_ic_usd(args.input_file, args.output_file,
-                                  args.spatial_constraint_1, args.spatial_constraint_2,
-                                  args.duration_constraint_1, args.duration_constraint_2, args.duration_constraint_3)
+    actual_output_df = tsc_ic_usd(input_file, output_file, 1, 1, 300, 0, 300)
 
     # Check if output file was created
     assert os.path.exists(output_file)
@@ -46,4 +33,4 @@ def test_tsc_ic_usd(tmp_path):
     assert len(list(set(expected_output_columns) & set(actual_output_df.columns))) == len(expected_output_columns)
 
     # Check if output file was written successfully
-    assert os.path.exists(args.output_file)
+    assert os.path.exists(output_file)
