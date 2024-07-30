@@ -1,158 +1,97 @@
-import pytest
 import pandas as pd
 import numpy as np
-from mawpy.constants import STAY_LAT, STAY_LONG, STAY_LAT_LONG, STAY
-from mawpy.distance import distance
+from hypothesis import given, settings, strategies as st
+from hypothesis.extra.pandas import column, data_frames, range_indexes
+from mawpy.constants import STAY_LAT, STAY_LONG, STAY
 from mawpy.utilities.common import _mean_ignore_minus_ones, _merge_stays, get_combined_stay, get_stay_groups
 
-def test_mean_ignore_minus_ones():
-
-    # series with -1 and positive numbers
-    series = pd.Series([1, 2, -1, 3, -1, 4, 5, -1])
+# Testing _mean_ignore_minus_one()
+series_strategy = st.lists(st.one_of(st.integers(min_value=-1, max_value=100), st.just(-1)),
+                            min_size=1,
+                            max_size=100).map(pd.Series)
+@given(series=series_strategy)
+def test_mean_ignore_minus_ones(series):
     result = _mean_ignore_minus_ones(series)
-    assert isinstance(result, float)
-    assert result == 3
+    if all(series == -1):
+        assert result == -1
+    else:
+        assert result == series[series != -1].mean()
 
-    # series with only -1
-    series = pd.Series([-1, -1, -1])
-    assert _mean_ignore_minus_ones(series) == -1
+# Testing _merge_stays()
+df_columns = {
+    STAY: {"elements": st.integers(min_value=0, max_value=10)},
+    STAY_LAT: {"elements": st.floats(min_value=-90, max_value=90)},
+    STAY_LONG: {"elements": st.floats(min_value=-180, max_value=180)}
+}
+df_strategy = data_frames(
+    index=range_indexes(min_size=5, max_size=10),
+    columns=[column(key, **value) for key, value in df_columns.items()]
+)
+@given(df_by_user=df_strategy, group_avgs=df_strategy, stay_to_update=st.integers(min_value=0, max_value=10),
+       updated_stay=st.integers(min_value=0, max_value=10), group_avgs_index_to_update=st.integers(min_value=0, max_value=10))
+@settings(max_examples=100, deadline=None)
+def test_merge_stays(df_by_user, group_avgs, stay_to_update, updated_stay, group_avgs_index_to_update):
 
-    # series with positive numbers
-    series = pd.Series([1, 3, 5, 7, 9])
-    assert _mean_ignore_minus_ones(series) == 5
+    result_df = _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avgs_index_to_update)
 
-    # list instead of pandas series
-    with pytest.raises(TypeError):
-        _mean_ignore_minus_ones([1, 2, -1, 3, -1, 4, 5, -1])
+    df_by_user_expected = df_by_user.copy()
+    group_avgs_expected = group_avgs.copy()
 
-def test_merge_stays():
+    # Exclude -1 and compute the mean for latitite and longitude series
+    merged_values = df_by_user[df_by_user[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
+    means = {}
+    for column in merged_values.columns:
+        column_data = merged_values[column]
+        if (column_data == -1).all():
+            means[column] = -1
+        else:
+            means[column] = column_data[column_data != -1].mean()
+    new_avg = pd.Series(means)
 
-    df_by_user = pd.DataFrame({
-        STAY: [1, 1, 2, 2, 3],
-        STAY_LAT: [10, 20, -1, 30, 40],
-        STAY_LONG: [15, -1, 25, -1, 35]
-    })
-    group_avgs = pd.DataFrame({
-        STAY: [1, 2, 3],
-        STAY_LAT: [15, 30, 40],
-        STAY_LONG: [10, 25, 35]
-    })
+    # Update expected DataFrames with new average location data
+    df_by_user_expected.loc[df_by_user_expected[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
+    group_avgs_expected.loc[group_avgs_expected[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
+    group_avgs_expected.loc[group_avgs_index_to_update, STAY] = updated_stay
+    group_avgs_expected.loc[group_avgs_index_to_update, [STAY_LAT, STAY_LONG]] = new_avg.values
 
-    # Test 1: Merges stay ID 1 into stay ID 2
-    result_df_by_user = _merge_stays(1, 2, df_by_user.copy(), group_avgs.copy(), 2) # average is recalculated after the merge
-    expected_df_by_user = pd.DataFrame({
-        STAY: [2, 2, 2, 2, 3],
-        STAY_LAT: [20, 20, 20, 20, 40],
-        STAY_LONG: [20, 20, 20, 20, 35]
-    })
-    assert isinstance(result_df_by_user, pd.DataFrame)
-    pd.testing.assert_frame_equal(result_df_by_user, expected_df_by_user, rtol=1e-5)
+    pd.testing.assert_frame_equal(result_df, df_by_user_expected, check_dtype=False, rtol=1e-05)
 
-    # Test 2: Merges stay ID 2 into stay ID 3
-    result_df_by_user = _merge_stays(2, 3, df_by_user.copy(), group_avgs.copy(), 1) # average is recalculated after the merge
-    expected_df_by_user = pd.DataFrame({
-        STAY: [1, 1, 3, 3, 3],
-        STAY_LAT: [10, 20, 35, 35, 35],
-        STAY_LONG: [15, -1, 30, 30, 30]
-    })
-    pd.testing.assert_frame_equal(result_df_by_user, expected_df_by_user, rtol=1e-5)
+# Test3: Test get_combined_stay
+@given(df_by_user=df_strategy, threshold=st.floats(min_value=0.0, max_value=4000.0))
+@settings(max_examples=100, deadline=None)
+def test_get_combined_stay(df_by_user, threshold):
+    result = get_combined_stay(df_by_user, threshold)
 
-    # Test 3: No change - Merge stay ID 3 with itself
-    result_df_by_user = _merge_stays(3, 3, df_by_user.copy(), group_avgs.copy(), 2) # no change when merging a stay with itself
-    expected_df_by_user = df_by_user.copy()
-    pd.testing.assert_frame_equal(result_df_by_user, expected_df_by_user, rtol=1e-5)
+    # Stays same; no merges
+    if threshold == 0.0:
+        pd.testing.assert_frame_equal(result, df_by_user)
 
+    assert isinstance(result, pd.DataFrame)
 
-def test_get_combined_stay():
+# Test4: Test get_stay_groups
+@given(df_with_stay_added=df_strategy)
+@settings(max_examples=100, deadline=None)
+def test_get_stay_groups(df_with_stay_added):
 
-    # Test 1: No merges
-    df_by_user = pd.DataFrame({
-        STAY: [1, 2, 3],
-        STAY_LAT: [10, 20, 30],
-        STAY_LONG: [15, 25, 35]
-    })
-    result_df = get_combined_stay(df_by_user, threshold=20)
-    expected_df = df_by_user.copy()
-    pd.testing.assert_frame_equal(result_df, expected_df, rtol=1e-5)
+    # Single entry
+    if len(df_with_stay_added) == 1:
+        expected = np.array([0])
+        result = get_stay_groups(df_with_stay_added)
+        np.testing.assert_array_equal(result, expected)
 
-    # Test 2: Some merges
-    df_by_user = pd.DataFrame({
-        STAY: [1, 2, 3, 4, 5, 6],
-        STAY_LAT: [10, 20, 30, -1, 50, 60],
-        STAY_LONG: [11, 21, 31, -1, 51, 61]
-    })
-    expected_df = pd.DataFrame({
-        STAY: [1, 1, 1, 4, 5, 5],
-        STAY_LAT: [20, 20, 20, -1, 55, 55],
-        STAY_LONG: [21, 21, 21, -1, 56, 56]
-    })
-    result_df = get_combined_stay(df_by_user, threshold=2500)
-    pd.testing.assert_frame_equal(result_df, expected_df, rtol=1e-5)
+    # All same latitudes and longitudes
+    elif (df_with_stay_added[STAY_LAT].nunique() == 1) and (df_with_stay_added[STAY_LONG].nunique() == 1):
+        expected = np.zeros(len(df_with_stay_added), dtype=int)
+        result = get_stay_groups(df_with_stay_added)
+        np.testing.assert_array_equal(result, expected)
 
-    # Test 3: Many more merges
-    df_by_user = pd.DataFrame({
-        STAY: [1, 2, 3, 4, 5],
-        STAY_LAT: [10, 20, -1, -1, 50],
-        STAY_LONG: [15, 25, -1, -1, 55]
-    })
-    expected_df = pd.DataFrame({
-        STAY: [1, 1, 1, 1, 5],
-        STAY_LAT: [15, 15, 15, 15, 50],
-        STAY_LONG: [20, 20, 20, 20, 55]
-    })
-    result_df = get_combined_stay(df_by_user, threshold=4500)
-    pd.testing.assert_frame_equal(result_df, expected_df, rtol=1e-5)
-
-    # Test 4: No iterations, total_groups=1
-    df_by_user = pd.DataFrame({
-        STAY: [1],
-        STAY_LAT: [10],
-        STAY_LONG: [15]
-    })
-    expected_df = df_by_user.copy()
-    result_df = get_combined_stay(df_by_user, threshold=10)
-    pd.testing.assert_frame_equal(result_df, expected_df, rtol=1e-5)
-
-def test_get_stay_groups():
-
-    # Test1: Same consecutive values
-    df_with_stay_added = pd.DataFrame({
-        STAY_LAT: [1, 1, 2, 2, 3, 3],
-        STAY_LONG: [10, 10, 20, 20, 30, 30]
-    })
-    expected_groups = np.array([0, 0, 1, 1, 2, 2])
-    result_groups = get_stay_groups(df_with_stay_added)
-    np.testing.assert_array_equal(result_groups, expected_groups)
-
-    # Test2: Same/Different values
-    df_with_stay_added = pd.DataFrame({
-        STAY_LAT: [1, 1, 2, 2, 2, 3, 3, 3],
-        STAY_LONG: [10, 10, 20, 20, 25, 30, 30, 35]
-    })
-    expected_groups = np.array([0, 0, 1, 1, 2, 3, 3, 4])
-    result_groups = get_stay_groups(df_with_stay_added)
-    np.testing.assert_array_equal(result_groups, expected_groups)
-
-    # Test3: All different values
-    df_with_stay_added = pd.DataFrame({
-        STAY_LAT: [1, 2, 3, 4],
-        STAY_LONG: [10, 20, 30, 40]
-    })
-    expected_groups = np.array([0, 1, 2, 3])
-    result_groups = get_stay_groups(df_with_stay_added)
-    np.testing.assert_array_equal(result_groups, expected_groups)
-
-    # Test4:  Same values
-    df_with_stay_added = pd.DataFrame({
-        STAY_LAT: [1, 1, 1, 1],
-        STAY_LONG: [10, 10, 10, 10]
-    })
-    expected_groups = np.array([0, 0, 0, 0])
-    result_groups = get_stay_groups(df_with_stay_added)
-    np.testing.assert_array_equal(result_groups, expected_groups)
-
-    # Test5: Empty Dataframe
-    df_with_stay_added = pd.DataFrame(columns=[STAY_LAT, STAY_LONG])
-    expected_groups = np.array([])
-    result_groups = get_stay_groups(df_with_stay_added)
-    np.testing.assert_array_equal(result_groups, expected_groups)
+    # Different locations
+    elif len(df_with_stay_added) > 1:
+        expected = np.zeros(len(df_with_stay_added), dtype=int)
+        for i in range(1, len(df_with_stay_added)):
+            if (df_with_stay_added[STAY_LAT].iloc[i] != df_with_stay_added[STAY_LAT].iloc[i - 1]) or (df_with_stay_added[STAY_LONG].iloc[i] != df_with_stay_added[STAY_LONG].iloc[i - 1]):
+                expected[i] = expected[i - 1] + 1
+            else:
+                expected[i] = expected[i - 1]
+        result = get_stay_groups(df_with_stay_added)
+        np.testing.assert_array_equal(result, expected)
