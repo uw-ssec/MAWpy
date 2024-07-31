@@ -20,19 +20,6 @@ def _merge_stays(stay_to_update: int, updated_stay: int, df_by_user: pd.DataFram
     """
         Merges two stays for a user and updates the mean_lat and mean_long of the stay.
     """
-    # Validate DataFrames
-    if df_by_user.empty or group_avgs.empty:
-        raise ValueError("One or both DataFrames (df_by_user, group_avgs) are empty; cannot perform merge.")
-    if len(df_by_user) < 2:
-        raise ValueError("Not enough rows in df_by_user for merging; cannot perform merge.")
-
-    # Check for required columns
-    required_columns = [STAY, STAY_LAT_LONG]
-    if not all(col in df_by_user.columns for col in required_columns):
-        raise KeyError(f"Missing required columns in df_by_user. Required: {required_columns}")
-    if not all(col in group_avgs.columns for col in required_columns):
-        raise KeyError(f"Missing required columns in group_avgs. Required: {required_columns}")
-
     df_by_user.loc[df_by_user[STAY] == stay_to_update, STAY] = updated_stay
     merged_values = df_by_user[df_by_user[STAY] == updated_stay][STAY_LAT_LONG]
     new_avg = merged_values.apply(_mean_ignore_minus_ones).fillna(-1)
@@ -60,14 +47,6 @@ def get_combined_stay(df_by_user: pd.DataFrame, threshold: float = 0.2) -> pd.Da
                         and distance between them is less than threshold, then this_stay, next_stay, next_to_next_stay
                          are merged.
     """
-    # Validate DataFrames
-    if df_by_user.empty:
-        raise ValueError("DataFrame (df_by_user) empty; cannot perform merge.")
-
-    # Check for required columns
-    required_columns = [STAY, STAY_LAT_LONG]
-    if not all(col in df_by_user.columns for col in required_columns):
-        raise KeyError(f"Missing required columns in df_by_user. Required: {required_columns}")
 
     # Calculate the average values for each group
     group_avgs = df_by_user.groupby(STAY)[STAY_LAT_LONG].mean().reset_index()
@@ -113,15 +92,6 @@ def get_stay_groups(df_with_stay_added):
     """
         Groups together consecutive traces that have the same value for lat and lon
     """
-    # Validate DataFrames
-    if df_with_stay_added.empty:
-        raise ValueError("DataFrame (df_with_stay_added) empty; cannot perform merge.")
-
-    # Check for required columns
-    required_columns = [STAY, STAY_LAT_LONG]
-    if not all(col in df_with_stay_added.columns for col in required_columns):
-        raise KeyError(f"Missing required columns in df_with_stay_added. Required: {required_columns}")
-
     lat = df_with_stay_added[STAY_LAT].to_numpy()
     long = df_with_stay_added[STAY_LONG].to_numpy()
 
