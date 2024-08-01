@@ -1,15 +1,12 @@
-import argparse
-import logging
-
-logger = logging.getLogger(__name__)
+from mawpy.constants import INPUT_ARGS_LIST
 
 
 def check_non_negative(value):
-    try:
-        f_value = float(value)
-    except Exception as ex:
-        logger.error(ex)
-        raise argparse.ArgumentTypeError(f"{value} is not a valid non-negative numerical value")
-    if f_value < 0:
-        raise argparse.ArgumentTypeError(f"{value} is not a valid non-negative numerical value")
-    return f_value
+    if value < 0:
+        raise ValueError(f"{value} is not a valid non-negative numerical value")
+
+
+def validate_input_args(**kwargs):
+    for k, val in kwargs.items():
+        if k in INPUT_ARGS_LIST:
+            check_non_negative(val)

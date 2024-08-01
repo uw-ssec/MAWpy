@@ -5,6 +5,7 @@ import pandas as pd
 
 from mawpy.constants import USER_ID, UNIX_START_T, STAY_DUR, STAY_LAT, ORIG_LAT, ORIG_LONG, STAY_LONG, AO_COLUMNS
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
+from mawpy.utilities.validations import validate_input_args
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +257,7 @@ def address_oscillation(output_file: str, dur_constraint: float, input_df: pd.Da
         input_df = get_preprocessed_dataframe(input_file)
 
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
+    validate_input_args(duration_constraint=dur_constraint)
     args = (dur_constraint,)
     output_df = execute_parallel(user_id_chunks, input_df, _run, args)
     output_columns = list(set(AO_COLUMNS) & set(output_df.columns))

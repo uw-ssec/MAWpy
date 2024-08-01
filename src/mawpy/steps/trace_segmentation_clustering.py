@@ -8,6 +8,7 @@ from mawpy.constants import (USER_ID, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, UNIX
 from mawpy.distance import distance
 from mawpy.utilities.common import get_combined_stay, get_stay_groups
 from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
+from mawpy.utilities.validations import validate_input_args
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ def trace_segmentation_clustering(output_file: str, spatial_constraint: float, d
         input_df = get_preprocessed_dataframe(input_file)
 
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
-    # input_df.set_index(keys=[USER_ID], inplace=True)
+    validate_input_args(duration_constraint=dur_constraint, spatial_constraint=spatial_constraint)
     args = (spatial_constraint, dur_constraint)
     output_df = execute_parallel(user_id_chunks, input_df, _run, args)
 

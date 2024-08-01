@@ -2,7 +2,6 @@
 import datetime
 import logging
 
-import multiprocessing
 
 import pandas as pd
 
@@ -14,15 +13,13 @@ import os
 
 import argparse
 
-from mawpy.utilities.validations import check_non_negative
-
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
 parser.add_argument("output_file", help="the CSV file to write the output to.")
-parser.add_argument('--spatial_constraint', default=1.0, type=check_non_negative, required=False)
-parser.add_argument('--duration_constraint_1', default=0, type=check_non_negative, required=False)
-parser.add_argument('--duration_constraint_2', default=300, type=check_non_negative, required=False)
-parser.add_argument('--duration_constraint_3', default=300, type=check_non_negative, required=False)
+parser.add_argument('--spatial_constraint', default=1.0, type=float, required=False)
+parser.add_argument('--duration_constraint_1', default=0, type=float, required=False)
+parser.add_argument('--duration_constraint_2', default=300, type=float, required=False)
+parser.add_argument('--duration_constraint_3', default=300, type=float, required=False)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +40,6 @@ def ao_ic_usd(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
     ao_ic_usd(args.input_file, AO_IC_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,
               args.duration_constraint_2, args.duration_constraint_3)
