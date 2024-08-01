@@ -7,9 +7,11 @@ import multiprocessing
 import pandas as pd
 
 from mawpy.constants import AO_IC_USD_WIP_FILE_NAME
-from mawpy.steps.address_oscillation import address_oscillation
-from mawpy.steps.incremental_clustering import incremental_clustering
-from mawpy.steps.update_stay_duration import update_stay_duration
+from mawpy.steps import (
+    address_oscillation,
+    incremental_clustering,
+    update_stay_duration
+)
 import os
 
 import argparse

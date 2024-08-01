@@ -6,8 +6,13 @@ import pandas as pd
 from mawpy.constants import (USER_ID, UNIX_START_DATE, ORIG_LAT, ORIG_LONG, UNIX_START_T,
                              STAY_LAT, STAY_LONG, STAY_DUR, STAY, TSC_COLUMNS)
 from mawpy.distance import distance
-from mawpy.utilities.common import get_combined_stay, get_stay_groups
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
+from ..utilities import (
+    get_combined_stay,
+    get_stay_groups,
+    get_preprocessed_dataframe,
+    get_list_of_chunks_by_column,
+    execute_parallel
+)
 
 logger = logging.getLogger(__name__)
 
