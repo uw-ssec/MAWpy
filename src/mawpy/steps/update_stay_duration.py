@@ -2,7 +2,11 @@ import logging
 import pandas as pd
 
 from mawpy.constants import UNIX_START_T, USER_ID, STAY_DUR, STAY_LAT, STAY_LONG, STAY_UNC, STAY, UNIX_START_DATE
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
+from ..utilities import (
+    get_preprocessed_dataframe,
+    get_list_of_chunks_by_column,
+    execute_parallel
+)
 
 logger = logging.getLogger(__name__)
 
