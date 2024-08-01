@@ -12,8 +12,6 @@ import os
 
 import argparse
 
-from mawpy.utilities.validations import check_non_negative
-
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
 parser.add_argument("output_file", help="the CSV file to write the output to.")
