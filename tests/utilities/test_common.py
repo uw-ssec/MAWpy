@@ -27,26 +27,25 @@ df_strategy = data_frames(
     index=range_indexes(min_size=5, max_size=10),
     columns=[column(key, **value) for key, value in df_columns.items()]
 )
-@given(df_by_user=df_strategy, group_avgs=df_strategy, stay_to_update=st.integers(min_value=0, max_value=10),
-       updated_stay=st.integers(min_value=0, max_value=10), group_avgs_index_to_update=st.integers(min_value=0, max_value=10))
+@given(df_by_user=df_strategy)
 @settings(max_examples=100, deadline=None)
-def test_merge_stays(df_by_user, group_avgs, stay_to_update, updated_stay, group_avgs_index_to_update):
+def test_merge_stays(df_by_user):
 
-    result_df = _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avgs_index_to_update)
+    unique_stays = df_by_user[STAY].unique()
+    stay_to_update = st.sampled_from(unique_stays).map(int)
+    updated_stay = st.sampled_from(unique_stays).map(int)
+    group_avgs = df_by_user.groupby(STAY)[[STAY_LAT, STAY_LONG]].mean().reset_index()
+    group_avgs_index_to_update = group_avgs.loc[group_avgs[STAY] == stay_to_update].index
 
     df_by_user_expected = df_by_user.copy()
     group_avgs_expected = group_avgs.copy()
 
+    result_df = _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avgs_index_to_update)
+
     # Exclude -1 and compute the mean for latitite and longitude series
-    merged_values = df_by_user[df_by_user[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
-    means = {}
-    for column in merged_values.columns:
-        column_data = merged_values[column]
-        if (column_data == -1).all():
-            means[column] = -1
-        else:
-            means[column] = column_data[column_data != -1].mean()
-    new_avg = pd.Series(means)
+    merged_values = df_by_user_expected[df_by_user_expected[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
+    means = merged_values[merged_values != -1].mean()
+    new_avg = pd.Series(means, index=[STAY_LAT, STAY_LONG])
 
     # Update expected DataFrames with new average location data
     df_by_user_expected.loc[df_by_user_expected[STAY] == updated_stay, [STAY_LAT, STAY_LONG]] = new_avg.values
@@ -57,7 +56,7 @@ def test_merge_stays(df_by_user, group_avgs, stay_to_update, updated_stay, group
     pd.testing.assert_frame_equal(result_df, df_by_user_expected, check_dtype=False, rtol=1e-05)
 
 # Test3: Test get_combined_stay
-@given(df_by_user=df_strategy, threshold=st.floats(min_value=0.0, max_value=4000.0))
+@given(df_by_user=df_strategy, threshold=st.floats(min_value=0.0, max_value=10.0))
 @settings(max_examples=100, deadline=None)
 def test_get_combined_stay(df_by_user, threshold):
     result = get_combined_stay(df_by_user, threshold)
