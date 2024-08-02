@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 from mawpy.constants import USER_ID, UNIX_START_T, STAY_DUR, STAY_LAT, ORIG_LAT, ORIG_LONG, STAY_LONG, AO_COLUMNS
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
-from mawpy.utilities.validations import validate_input_args
+from mawpy.utilities import (get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel,
+                             validate_input_args)
 
 logger = logging.getLogger(__name__)
 

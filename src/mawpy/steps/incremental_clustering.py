@@ -19,10 +19,15 @@ from sklearn.cluster import KMeans
 from mawpy.constants import (USER_ID, STAY_DUR, ORIG_LAT, STAY_LAT, STAY_LONG, STAY_UNC, ORIG_LONG, ORIG_UNC, STAY,
                              UNIX_START_T, IC_COLUMNS)
 from mawpy.distance import distance
-from mawpy.utilities.common import get_combined_stay, get_stay_groups
-from mawpy.utilities.cluster import Cluster
-from mawpy.utilities.preprocessing import get_preprocessed_dataframe, get_list_of_chunks_by_column, execute_parallel
-from mawpy.utilities.validations import validate_input_args
+from mawpy.utilities import (
+    Cluster,
+    get_combined_stay,
+    get_stay_groups,
+    get_preprocessed_dataframe,
+    get_list_of_chunks_by_column,
+    execute_parallel,
+    validate_input_args
+)
 
 logger = logging.getLogger(__name__)
 
