@@ -96,5 +96,3 @@ def test_get_stay_groups(df_with_stay_added):
                 expected[i] = expected[i - 1]
         result = get_stay_groups(df_with_stay_added)
         np.testing.assert_array_equal(result, expected)
-
-test_merge_stays()
