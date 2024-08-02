@@ -45,4 +45,4 @@ if __name__ == "__main__":
               args.duration_constraint_2, args.duration_constraint_3)
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
-    os.rename(AO_IC_USD_WIP_FILE_NAME, args.outout_file)
+    os.rename(AO_IC_USD_WIP_FILE_NAME, args.output_file)
