@@ -263,5 +263,5 @@ def address_oscillation(output_file: str, dur_constraint: float, input_df: pd.Da
     output_columns = list(set(AO_COLUMNS) & set(output_df.columns))
     output_df = output_df[output_columns]
     output_df.dropna(how="all")
-    output_df.to_csv(output_file, index=False)
+    output_df.to_csv(output_file, columns=sorted(output_df.columns), index=False)
     return output_df
