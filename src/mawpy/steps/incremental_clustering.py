@@ -1,4 +1,8 @@
 """
+======================
+Incremental Clustering
+======================
+
 Perform clustering on multiple locations of one user based on a spatial threshold
 Each cluster of locations represents a potential stay
 
@@ -8,6 +12,8 @@ input:
     duration constraint threshold (for detect common stay)
 output:
     potential stays represented by clusters of locations
+
+TODO: Add pseudocode
 """
 import logging
 
@@ -285,7 +291,26 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
 def incremental_clustering(output_file: str, spatial_constraint: float,
                            dur_constraint: float,
                            input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
+    """_summary_
 
+    Parameters
+    ----------
+    output_file : str
+        _description_
+    spatial_constraint : float
+        _description_
+    dur_constraint : float
+        _description_
+    input_df : pd.DataFrame | None, optional
+        _description_, by default None
+    input_file : str, optional
+        _description_, by default None
+
+    Returns
+    -------
+    pd.DataFrame | None
+        _description_
+    """
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
         return None
