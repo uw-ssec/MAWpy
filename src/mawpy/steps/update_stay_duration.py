@@ -59,5 +59,5 @@ def update_stay_duration(output_file: str, dur_constraint: float,
     args = (dur_constraint,)
     output_df = execute_parallel(user_id_chunks, input_df, _run, args)
     output_df.dropna(how="all")
-    output_df.to_csv(output_file, index=False)
+    output_df.to_csv(output_file, columns=sorted(output_df.columns), index=False)
     return output_df
