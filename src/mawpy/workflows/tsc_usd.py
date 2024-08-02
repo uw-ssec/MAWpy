@@ -2,7 +2,6 @@
 import datetime
 import logging
 
-import multiprocessing
 
 import pandas as pd
 
@@ -14,6 +13,7 @@ from mawpy.steps import (
 import os
 
 import argparse
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
@@ -40,7 +40,6 @@ def tsc_usd(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
     tsc_usd(args.input_file, TSC_USD_WIP_FILE_NAME, args.spatial_constraint,
               args.duration_constraint_1, args.duration_constraint_2)

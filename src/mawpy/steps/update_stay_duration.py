@@ -2,10 +2,11 @@ import logging
 import pandas as pd
 
 from mawpy.constants import UNIX_START_T, USER_ID, STAY_DUR, STAY_LAT, STAY_LONG, STAY_UNC, STAY, UNIX_START_DATE
-from ..utilities import (
+from mawpy.utilities import (
     get_preprocessed_dataframe,
     get_list_of_chunks_by_column,
-    execute_parallel
+    execute_parallel,
+    validate_input_args
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ def update_stay_duration(output_file: str, dur_constraint: float,
         input_df = get_preprocessed_dataframe(input_file)
 
     user_id_chunks = get_list_of_chunks_by_column(input_df, USER_ID)
+    validate_input_args(duration_constraint=dur_constraint)
     args = (dur_constraint,)
     output_df = execute_parallel(user_id_chunks, input_df, _run, args)
     output_df.dropna(how="all")

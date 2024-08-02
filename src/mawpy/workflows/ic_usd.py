@@ -2,7 +2,6 @@
 import datetime
 import logging
 
-import multiprocessing
 
 import pandas as pd
 
@@ -41,7 +40,6 @@ def ic_usd(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
     ic_usd(args.input_file, IC_USD_WIP_FILE_NAME, args.spatial_constraint,
            args.duration_constraint_1, args.duration_constraint_2)

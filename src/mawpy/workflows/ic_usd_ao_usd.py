@@ -2,7 +2,6 @@
 import datetime
 import logging
 
-import multiprocessing
 
 import pandas as pd
 
@@ -15,6 +14,7 @@ from mawpy.steps import (
 import os
 
 import argparse
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="the CSV file to read the input from")
@@ -46,7 +46,6 @@ def ic_usd_ao_usd(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    multiprocessing.freeze_support() # TODO: do we require this? most probably NOT.
     st = datetime.datetime.now()
     ic_usd_ao_usd(args.input_file, IC_USD_AO_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,
                   args.duration_constraint_2, args.duration_constraint_3, args.duration_constraint_4)

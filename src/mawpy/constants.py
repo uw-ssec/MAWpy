@@ -35,3 +35,6 @@ TSC_USD_WIP_FILE_NAME = "tsc_usd_wip.csv"
 AO_IC_USD_WIP_FILE_NAME = "ao_ic_usd_wip.csv"
 IC_USD_AO_USD_WIP_FILE_NAME = "ic_usd_ao_usd_wip.csv"
 TSC_IC_USD_WIP_FILE_NAME = "tsc_ic_usd_wip.csv"
+
+SPATIAL_CONSTRAINT = "spatial_constraint"
+DURATION_CONSTRAINT = "duration_constraint"
