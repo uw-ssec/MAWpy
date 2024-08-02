@@ -26,6 +26,19 @@ dependencies = [
 ]
 description = "Mobility Analysis Workflow in Python"
 readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.license]
+file = "LICENSE"
 
 [project.optional-dependencies]
 dev = [
