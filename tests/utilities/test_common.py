@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 import numpy as np
 from hypothesis import given, settings, strategies as st
@@ -32,8 +33,8 @@ df_strategy = data_frames(
 def test_merge_stays(df_by_user):
 
     unique_stays = df_by_user[STAY].unique()
-    stay_to_update = st.sampled_from(unique_stays).map(int)
-    updated_stay = st.sampled_from(unique_stays).map(int)
+    stay_to_update=random.choice(unique_stays)
+    updated_stay = random.choice(unique_stays)
     group_avgs = df_by_user.groupby(STAY)[[STAY_LAT, STAY_LONG]].mean().reset_index()
     group_avgs_index_to_update = group_avgs.loc[group_avgs[STAY] == stay_to_update].index
 
@@ -43,6 +44,7 @@ def test_merge_stays(df_by_user):
     result_df = _merge_stays(stay_to_update, updated_stay, df_by_user, group_avgs, group_avgs_index_to_update)
 
     # Exclude -1 and compute the mean for latitite and longitude series
+    df_by_user_expected.loc[df_by_user_expected[STAY] == stay_to_update, STAY] = updated_stay
     merged_values = df_by_user_expected[df_by_user_expected[STAY] == updated_stay][[STAY_LAT, STAY_LONG]]
     means = merged_values[merged_values != -1].mean()
     new_avg = pd.Series(means, index=[STAY_LAT, STAY_LONG])
@@ -94,3 +96,5 @@ def test_get_stay_groups(df_with_stay_added):
                 expected[i] = expected[i - 1]
         result = get_stay_groups(df_with_stay_added)
         np.testing.assert_array_equal(result, expected)
+
+test_merge_stays()
