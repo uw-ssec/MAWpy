@@ -6,9 +6,11 @@ import logging
 import pandas as pd
 
 from mawpy.constants import TSC_IC_USD_WIP_FILE_NAME
-from mawpy.steps.incremental_clustering import incremental_clustering
-from mawpy.steps.trace_segmentation_clustering import trace_segmentation_clustering
-from mawpy.steps.update_stay_duration import update_stay_duration
+from mawpy.steps import (
+    trace_segmentation_clustering,
+    incremental_clustering,
+    update_stay_duration
+)
 import os
 
 import argparse
