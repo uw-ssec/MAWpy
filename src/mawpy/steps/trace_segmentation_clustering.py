@@ -13,7 +13,9 @@ pseudocode:
 
         RETURN df_by_user_chunk
 
+
     DEFINE FUNCTION _run_for_user(df_by_user, spatial_constraint, dur_constraint):
+
         GROUP df_by_user BY UNIX_START_DATE
         APPLY _get_df_with_stays TO EACH group IN df_by_user
 
@@ -24,6 +26,7 @@ pseudocode:
 
 
     DEFINE FUNCTION _get_df_with_stays(each_day_df, spatial_constraint, dur_constraint):
+
         EXTRACT latitudes_for_day FROM each_day_df
         EXTRACT longitudes_for_day FROM each_day_df
         EXTRACT timestamps_for_day FROM each_day_df
@@ -65,8 +68,8 @@ pseudocode:
         RETURN each_day_df
 
 
-
     DEFINE FUNCTION _get_diameter_constraint_exceed_index(starting_index, point_to_check, latitudes_list, longitudes_list, spatial_constraint):
+
         INITIALIZE distance_map as an empty dictionary
 
         FOR i FROM starting_index TO point_to_check - 1:
@@ -85,6 +88,7 @@ pseudocode:
 
 
     DEFINE FUNCTION _does_duration_threshold_exceed(point_i, point_j, timestamps_list, duration_constraint):
+
         RETURN (timestamps_list[point_j] - timestamps_list[point_i]) >= duration_constraint
 
 """

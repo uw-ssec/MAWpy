@@ -18,7 +18,9 @@ pseudocode:
     _get_locations_to_cluster_center_map → _get_cluster_center →
     _filter_by_durations_constraint (if applicable) → back to _run.
 
+
     DEFINE FUNCTION _run(df_by_user_chunk, args):
+
         EXTRACT spatial and duration constraints from args
 
         GET DataFrame columns
@@ -30,7 +32,9 @@ pseudocode:
 
         RETURN updated DataFrame
 
+
     DEFINE FUNCTION _run_for_user(df_by_user, df_columns, spat_constr, dur_constr):
+
         SORT DataFrame by UNIX_START_T
 
         GET original locations from DataFrame
@@ -55,7 +59,9 @@ pseudocode:
 
         RETURN updated DataFrame
 
+
     DEFINE FUNCTION _get_clusters(locations_for_clustering, spat_constr):
+
         INITIALIZE list to store clusters
 
         CREATE the first cluster with the first location
@@ -77,7 +83,9 @@ pseudocode:
 
         RETURN the list of clusters
 
+
     DEFINE FUNCTION _k_means_cluster_lloyd(cluster_list):
+
         INITIALIZE list to store unique GPS points
 
         FOR each cluster in cluster_list:
@@ -108,6 +116,7 @@ pseudocode:
 
         RETURN the list of new clusters
 
+
     DEFINE FUNCTION _get_locations_to_cluster_center_map(clusters_list):
 
         INITIALIZE dictionary to store mapping
@@ -117,6 +126,7 @@ pseudocode:
             MAP each point in the cluster to its cluster center and radius
 
         RETURN the mapping dictionary
+
 
     DEFINE FUNCTION _get_cluster_center(row, df_columns, mapping, dur_constr):
 
@@ -131,6 +141,7 @@ pseudocode:
             RETURN cluster center lat, long, and max of unc or cluster radius
         ELSE:
             RETURN original lat, long, and unc
+
 
     DEFINE FUNCTION _filter_by_durations_constraint(df_by_user, duration_constraint):
 
