@@ -3,5 +3,18 @@
 
 format: jb-book
 root: intro
-chapters:
-  - file: demo
+parts:
+  - caption: Tutorials and Demo
+    chapters:
+      - file: demo
+  - caption: Help and References
+    max_depth: 2
+    chapters:
+      - file: references/index
+        sections:
+          - file: references/steps/index
+            sections:
+              - file: references/steps/incremental_clustering
+              - file: references/steps/update_stay_duration
+              - file: references/steps/trace_segmentation_clustering
+              - file: references/steps/address_oscillation

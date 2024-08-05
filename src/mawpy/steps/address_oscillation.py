@@ -1,3 +1,11 @@
+"""
+===================
+Address Oscillation
+===================
+
+TODO: Add description and pseudocode
+
+"""
 import logging
 
 import numpy as np
