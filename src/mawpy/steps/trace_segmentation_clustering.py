@@ -4,7 +4,7 @@ Trace Segmentation Clustering
 =============================
 
 pseudocode:
-    ORDER OF EXECUTION: _run → _run_for_user → _get_df_with_stays → _get_diameter_constraint_exceed_index, → _does_duration_threshold_exceed →
+    ORDER OF EXECUTION: _run → _run_for_user → _get_df_with_stays → _get_diameter_constraint_exceed_index, → _does_duration_threshold_exceed
 
     DEFINE FUNCTION _run(df_by_user_chunk, args):
         EXTRACT spatial_constraint AND dur_constraint FROM args
@@ -12,7 +12,6 @@ pseudocode:
         APPLY _run_for_user TO EACH group IN df_by_user_chunk
 
         RETURN df_by_user_chunk
-
 
     DEFINE FUNCTION _run_for_user(df_by_user, spatial_constraint, dur_constraint):
 
@@ -23,7 +22,6 @@ pseudocode:
         ASSIGN results of get_combined_stay TO df_with_stay_added
 
         RETURN df_with_stay_added
-
 
     DEFINE FUNCTION _get_df_with_stays(each_day_df, spatial_constraint, dur_constraint):
 
@@ -67,7 +65,6 @@ pseudocode:
 
         RETURN each_day_df
 
-
     DEFINE FUNCTION _get_diameter_constraint_exceed_index(starting_index, point_to_check, latitudes_list, longitudes_list, spatial_constraint):
 
         INITIALIZE distance_map as an empty dictionary
@@ -85,7 +82,6 @@ pseudocode:
                 RETURN True, i
 
         RETURN False, -1
-
 
     DEFINE FUNCTION _does_duration_threshold_exceed(point_i, point_j, timestamps_list, duration_constraint):
 
