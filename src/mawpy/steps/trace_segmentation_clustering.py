@@ -3,7 +3,91 @@
 Trace Segmentation Clustering
 =============================
 
-TODO: Add description and pseudocode
+pseudocode:
+    ORDER OF EXECUTION: _run → _run_for_user → _get_df_with_stays → _get_diameter_constraint_exceed_index, → _does_duration_threshold_exceed →
+
+    DEFINE FUNCTION _get_diameter_constraint_exceed_index(starting_index, point_to_check, latitudes_list, longitudes_list, spatial_constraint):
+        INITIALIZE distance_map as an empty dictionary
+
+        FOR i FROM starting_index TO point_to_check - 1:
+            SET point_key = (latitudes_list[i], longitudes_list[i])
+
+            IF point_key is not in distance_map:
+                CALCULATE distance_for_point using distance(latitudes_list[i], longitudes_list[i], latitudes_list[point_to_check], longitudes_list[point_to_check])
+                STORE distance_for_point in distance_map with key point_key
+            ELSE:
+                GET distance_for_point from distance_map
+
+            IF distance_for_point > spatial_constraint:
+                RETURN True, i
+
+        RETURN False, -1
+
+
+    DEFINE FUNCTION _does_duration_threshold_exceed(point_i, point_j, timestamps_list, duration_constraint):
+        RETURN (timestamps_list[point_j] - timestamps_list[point_i]) >= duration_constraint
+
+
+    DEFINE FUNCTION _get_df_with_stays(each_day_df, spatial_constraint, dur_constraint):
+        EXTRACT latitudes_for_day FROM each_day_df
+        EXTRACT longitudes_for_day FROM each_day_df
+        EXTRACT timestamps_for_day FROM each_day_df
+        SET number_of_traces_for_day to length of each_day_df
+
+        INITIALIZE stay_lat, stay_long with -1.0 for all entries
+        INITIALIZE stay_dur with 0 for all entries
+
+        SET start to 0
+        SET end to 0
+        SET group_found to False
+
+        WHILE start <= end < number_of_traces_for_day:
+            CALL _get_diameter_constraint_exceed_index(start, end, latitudes_for_day, longitudes_for_day, spatial_constraint) TO GET has_exceeded, exceed_index
+
+            IF NOT group_found:
+                IF has_exceeded:
+                    SET start to exceed_index + 1
+                    CONTINUE
+
+                IF _does_duration_threshold_exceed(start, end, timestamps_for_day, dur_constraint):
+                    SET group_found to True
+                INCREMENT end by 1
+            ELSE:
+                IF has_exceeded:
+                    CALCULATE mean of latitudes_for_day[start: end] INTO stay_lat[start: end]
+                    CALCULATE mean of longitudes_for_day[start: end] INTO stay_long[start: end]
+                    CALCULATE duration from timestamps_for_day[start] TO timestamps_for_day[end - 1] INTO stay_dur[start: end]
+                    SET start to end
+                    SET group_found to False
+                ELSE:
+                    INCREMENT end by 1
+
+        IF group_found:
+            CALCULATE mean of latitudes_for_day[start: end] INTO stay_lat[start: end]
+            CALCULATE mean of longitudes_for_day[start: end] INTO stay_long[start: end]
+            CALCULATE duration from timestamps_for_day[start] TO timestamps_for_day[end - 1] INTO stay_dur[start: end]
+
+        ASSIGN stay_lat, stay_long, stay_dur TO each_day_df
+
+        RETURN each_day_df
+
+
+    DEFINE FUNCTION _run_for_user(df_by_user, spatial_constraint, dur_constraint):
+        GROUP df_by_user BY UNIX_START_DATE
+        APPLY _get_df_with_stays TO EACH group IN df_by_user
+
+        ASSIGN results of get_stay_groups TO the STAY column of df_with_stay
+        ASSIGN results of get_combined_stay TO df_with_stay_added
+
+        RETURN df_with_stay_added
+
+
+    DEFINE FUNCTION _run(df_by_user_chunk, args):
+        EXTRACT spatial_constraint AND dur_constraint FROM args
+        GROUP df_by_user_chunk BY USER_ID
+        APPLY _run_for_user TO EACH group IN df_by_user_chunk
+
+        RETURN df_by_user_chunk
 """
 import logging
 
