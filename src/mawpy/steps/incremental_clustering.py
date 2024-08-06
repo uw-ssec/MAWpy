@@ -56,7 +56,7 @@ pseudocode:
     # Step 8: Combine stays that are closely related
     CALL get_combined_stay FUNCTION WITH df_by_user AS argument
     UPDATE df_by_user WITH the combined stays
-    # This merges stays that are close to each other into a single stay group
+    # This merges stays that are close to each other into a single stay group based on threshold value
 
     # Step 9: If a duration constraint is provided, filter the DataFrame
     IF dur_constr EXISTS:
