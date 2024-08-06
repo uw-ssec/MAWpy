@@ -14,139 +14,58 @@ output:
     potential stays represented by clusters of locations
 
 pseudocode:
-    ORDER OF EXECUTION: _run → _run_for_user → _get_clusters → _k_means_cluster_lloyd →
-    _get_locations_to_cluster_center_map → _get_cluster_center →
-    _filter_by_durations_constraint (if applicable) → back to _run.
+    DEFINE FUNCTION run_for_user(df_by_user, df_columns, spat_constr, dur_constr):
 
-    DEFINE FUNCTION _run(df_by_user_chunk, args):
+    # Step 1: Sort the DataFrame by the UNIX_START_T column
+    SORT the DataFrame df_by_user BY column UNIX_START_T IN ascending order
+    # This ensures the traces are ordered chronologically
 
-        EXTRACT spatial and duration constraints from args
+    # Step 2: Extract unique location coordinates for clustering
+    EXTRACT columns ORIG_LAT and ORIG_LONG from df_by_user INTO orig_lat_long_df
+    CONVERT orig_lat_long_df TO a list of unique tuples (latitude, longitude)
+    STORE this list IN locations_for_clustering
+    # These coordinates will be used to form the initial clusters
 
-        GET DataFrame columns
+    # Step 3: Form initial clusters based on spatial constraints
+    CALL get_clusters FUNCTION WITH locations_for_clustering and spat_constr AS arguments
+    STORE the result IN clusters_list
+    # This step creates clusters based on spatial proximity
 
-        IF duration constraint is not provided or <= 0:
-            APPLY _run_for_user on each group in DataFrame grouped by USER_ID
-        ELSE:
-            APPLY _run_for_user with duration constraint on each group in DataFrame grouped by USER_ID
+    # Step 4: Apply K-Means clustering to refine the clusters
+    CALL k_means_cluster_lloyd FUNCTION WITH clusters_list AS argument
+    STORE the result IN clusters_list
+    # This corrects the order-related issues in the initial clusters
 
-        RETURN updated DataFrame
+    # Step 5: Map each location to its corresponding cluster center and radius
+    CALL get_locations_to_cluster_center_map FUNCTION WITH clusters_list AS argument
+    STORE the result IN locations_to_cluster_center_map
+    # This creates a mapping from each location to its cluster center and radius
 
-    DEFINE FUNCTION _run_for_user(df_by_user, df_columns, spat_constr, dur_constr):
+    # Step 6: Update the DataFrame with cluster center information
+    APPLY FUNCTION get_cluster_center TO each row in df_by_user
+    PASS row, df_columns, locations_to_cluster_center_map, and dur_constr AS arguments
+    EXPAND the result into columns STAY_LAT, STAY_LONG, and STAY_UNC
+    UPDATE df_by_user WITH these new values
+    # This step replaces original coordinates with cluster center coordinates in the DataFrame
 
-        SORT DataFrame by UNIX_START_T
+    # Step 7: Group stays based on the updated DataFrame
+    CALL get_stay_groups FUNCTION WITH df_by_user AS argument
+    UPDATE df_by_user WITH the resulting stay groups
+    # This step assigns each trace to a stay group based on the new cluster information
 
-        GET original locations from DataFrame
+    # Step 8: Combine stays that are closely related
+    CALL get_combined_stay FUNCTION WITH df_by_user AS argument
+    UPDATE df_by_user WITH the combined stays
+    # This merges stays that are close to each other into a single stay group
 
-        CONVERT locations to list of unique tuples
+    # Step 9: If a duration constraint is provided, filter the DataFrame
+    IF dur_constr EXISTS:
+        CALL filter_by_durations_constraint FUNCTION WITH df_by_user and dur_constr AS arguments
+        UPDATE df_by_user WITH the filtered DataFrame
+    # This step removes stays that do not meet the minimum duration requirement
 
-        IF no locations exist:
-            RETURN df_by_user
-
-        PERFORM clustering on original locations using _get_clusters
-
-        PERFORM KMeans clustering using _k_means_cluster_lloyd
-
-        CREATE mapping of locations to cluster centers using _get_locations_to_cluster_center_map
-
-        UPDATE DataFrame with cluster centers and uncertainty using _get_cluster_center
-
-        IDENTIFY stay groups and update DataFrame using get_stay_groups and get_combined_stay
-
-        IF dur_constr is provided:
-            FILTER DataFrame by duration constraint using _filter_by_durations_constraint
-
-        RETURN updated DataFrame
-
-    DEFINE FUNCTION _get_clusters(locations_for_clustering, spat_constr):
-
-        INITIALIZE list to store clusters
-
-        CREATE the first cluster with the first location
-
-        ADD the first cluster to the clusters_list
-
-        SET current_cluster to the first cluster
-
-        FOR each subsequent location:
-
-            IF location is within spatial constraint of current_cluster:
-                ADD location to current_cluster
-            ELSE:
-                CHECK other clusters to see if location fits within any cluster's spatial constraint
-                IF no suitable cluster is found:
-                    CREATE a new cluster with this location
-                    ADD new cluster to clusters_list
-                    SET current_cluster to new cluster
-
-        RETURN the list of clusters
-
-    DEFINE FUNCTION _k_means_cluster_lloyd(cluster_list):
-
-        INITIALIZE list to store unique GPS points
-
-        FOR each cluster in cluster_list:
-            ADD points from each cluster to the unique GPS list
-
-        SET k = number of clusters
-
-        CALCULATE center of points for y and x
-
-        INITIALIZE array to store distance coordinates
-
-        FOR each point in unique GPS list:
-            CALCULATE distance from center to point using distance function
-            CONVERT distances to coordinate system and store in distance_coord array
-
-        INITIALIZE array for initial cluster centers
-
-        FOR each cluster:
-            GET points belonging to the cluster
-            CALCULATE mean of these points
-            ADD the mean as the initial center for this cluster
-
-        PERFORM KMeans clustering using initial_centers
-
-        ASSIGN points to clusters based on KMeans labels
-
-        TRANSFORM membership dictionary into a list of new Cluster objects
-
-        RETURN the list of new clusters
-
-    DEFINE FUNCTION _get_locations_to_cluster_center_map(clusters_list):
-
-        INITIALIZE dictionary to store mapping
-
-        FOR each cluster:
-            CALCULATE cluster center and radius
-            MAP each point in the cluster to its cluster center and radius
-
-        RETURN the mapping dictionary
-
-    DEFINE FUNCTION _get_cluster_center(row, df_columns, mapping, dur_constr):
-
-        IF dur_constr is provided:
-            SET lat_long = (row[STAY_LAT], row[STAY_LONG])
-            SET unc = row[STAY_UNC] if STAY_UNC exists in df_columns, ELSE set unc = -1
-        ELSE:
-            SET lat_long = (row[ORIG_LAT], row[ORIG_LONG])
-            SET unc = row[ORIG_UNC] if ORIG_UNC exists in df_columns, ELSE set unc = -1
-
-        IF lat_long exists in mapping:
-            RETURN cluster center lat, long, and max of unc or cluster radius
-        ELSE:
-            RETURN original lat, long, and unc
-
-    DEFINE FUNCTION _filter_by_durations_constraint(df_by_user, duration_constraint):
-
-        GROUP by STAY and calculate minimum and maximum UNIX_START_T
-
-        CALCULATE duration for each group
-
-        FILTER out groups that do not meet the duration constraint
-
-        FILTER the original DataFrame based on the filtered groups
-
-        RETURN the filtered DataFrame
+    # Step 10: Return the final processed DataFrame
+    RETURN the updated df_by_user
 
 """
 import logging
