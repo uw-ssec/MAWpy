@@ -1,20 +1,24 @@
 # Mobility Analysis Workflow
 
-MAWpy is a Python package designed for mobility analysis workflows, providing tools for handling cellular/GPS traces
-and related data.
+MAWpy is a Python package designed for mobility analysis workflows, providing
+tools for handling cellular/GPS traces and related data.
 
-This repository contains scripts for processing user cellular/gps trace data using various techniques to improve 
-data quality and accuracy. The pipeline involves several steps to handle trace segmentation, incremental clustering,
-address oscillation and update stay duration. 
+This repository contains scripts for processing user cellular/gps trace data
+using various techniques to improve data quality and accuracy. The pipeline
+involves several steps to handle trace segmentation, incremental clustering,
+address oscillation and update stay duration.
 
 ## Overview
 
 The pipeline consists of the following processing steps:
 
-1. **Incremental Clustering**: Clusters  traces based on a spatial threshold to identify potential stay points.
+1. **Incremental Clustering**: Clusters traces based on a spatial threshold to
+   identify potential stay points.
 2. **Update Stay Duration**: Updates the duration of identified stays.
-3. **Address Oscillation**: Handles oscillations in traces to ensure accurate stay detection.
-4. **Trace Segmentation Clustering**: Segments  traces and clusters them based on spatial and duration constraints.
+3. **Address Oscillation**: Handles oscillations in traces to ensure accurate
+   stay detection.
+4. **Trace Segmentation Clustering**: Segments traces and clusters them based on
+   spatial and duration constraints.
 
 ## Prerequisites
 
@@ -23,9 +27,11 @@ The pipeline consists of the following processing steps:
 ## Installation As a Package
 
 To install MAWpy, you can use one of the following methods:
+
 ### Using PyPI
 
-The simplest way to install MAWpy is via PyPI using `pip`. This will install the package along with its dependencies:
+The simplest way to install MAWpy is via PyPI using `pip`. This will install the
+package along with its dependencies:
 
 ```bash
 pip install mawpy
@@ -47,13 +53,13 @@ source venv/bin/activate  # On Windows use: venv\Scripts\activate
 Install the main project dependencies:
 
 ```bash
-pip install . 
+pip install .
 ```
 
 ## Running Tests
 
-To ensure your changes are properly tested, follow these steps:
-Execute the test suite using `pytest`:
+To ensure your changes are properly tested, follow these steps: Execute the test
+suite using `pytest`:
 
 ```bash
 pytest
