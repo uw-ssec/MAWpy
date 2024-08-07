@@ -56,6 +56,31 @@ Install the main project dependencies:
 pip install .
 ```
 
+## 3. Install Development Dependencies
+
+To set up your development environment, you need to install additional
+dependencies. These dependencies are necessary for running tests, linting, and
+other development tasks.
+
+Run the following command to install all development dependencies:
+
+```bash
+pip install ".[dev]"
+```
+
+## 4. Install Documentation Dependencies
+
+To build and view the documentation, you need to install the necessary
+dependencies. Follow these steps to set up the documentation environment:
+
+Install the documentation dependencies using `pip`. These dependencies are
+listed under the `[docs]` optional dependencies in `pyproject.toml`. Run the
+following command:
+
+```bash
+pip install ".[docs]"
+```
+
 ## Running Tests
 
 To ensure your changes are properly tested, follow these steps: Execute the test
