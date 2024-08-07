@@ -39,6 +39,44 @@ def tsc_usd(
 
 
 if __name__ == "__main__":
+    """
+    Perform trace segmentation clustering and update stay duration on user data.
+
+    This script processes trace data using the following steps:
+    1. **Trace Segmentation Clustering**: Segments traces and clusters them based on a spatial constraint and duration threshold.
+    2. **Update Stay Duration**: Recalculates the duration of detected stays.
+
+    The processed data is saved to a specified output file.
+
+    Parameters
+    ----------
+    input_file : str
+        Path to the input CSV file containing the trace data.
+    output_file : str
+        Path to the output CSV file where the processed data will be saved.
+    spatial_constraint : float
+        The spatial threshold used for trace segmentation clustering. Default is 1.0.
+    duration_constraint_1 : float
+        The duration threshold used for trace segmentation clustering. Default is 0.
+    duration_constraint_2 : float
+        The minimum duration constraint for the final stay duration update. Default is 300.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame containing the processed traces data with updated stay durations.
+
+    Notes
+    -----
+    The script can be executed from the command line with the required arguments.
+
+    Example
+    -------
+    To run the script with custom parameters: (Make sure your python executable points to the right working directory)
+
+    ```bash
+    python3 tsc_usd.py <input csv file path> <output file path> --spatial_constraint=1 --duration_constraint_1=0 --duration_constraint_2=300
+    """
     args = parser.parse_args()
     st = datetime.datetime.now()
     tsc_usd(args.input_file, TSC_USD_WIP_FILE_NAME, args.spatial_constraint,

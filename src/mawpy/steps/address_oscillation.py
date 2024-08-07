@@ -3,7 +3,15 @@
 Address Oscillation
 ===================
 
-TODO: Add description and pseudocode
+Identify and address oscillations in traces to improve the accuracy of detected stays.
+This method processes a user's trace data to detect and correct oscillating traces—where the user
+appears to move back and forth between locations within a short time frame. The corrected data helps in accurately identifying true stays by reducing noise from oscillations.
+
+input:
+    gps stay information / cellular stay information
+    duration constraint threshold (required to consider a set of points as a stay.)
+output:
+    A DataFrame with oscillations addressed, improving the accuracy of detected stays and overall trace quality.
 
 """
 import logging
@@ -20,14 +28,18 @@ logger = logging.getLogger(__name__)
 
 def _transform_trace(row: pd.Series) -> pd.Series:
     """
-    Transforms a row of the dataframe by determining the duration, latitude, longitude,
+    Transform a row of the DataFrame by determining the duration, latitude, longitude,
     and whether it's a stay point or not.
 
-    Args:
-        row (pd.Series): A row from the dataframe.
+    Parameters
+    ----------
+    row : pd.Series
+        A row from the DataFrame.
 
-    Returns:
-        pd.Series: Transformed row with duration, latitude, longitude, and stay/not stay indicator.
+    Returns
+    -------
+    pd.Series
+        Transformed row with duration, latitude, longitude, and stay/not stay indicator.
     """
     # Determine duration, defaulting to 1 if not present or stay_dur
     duration = 1 if STAY_DUR not in row or row[STAY_DUR] == -1 else row[STAY_DUR]
@@ -46,13 +58,17 @@ def _transform_trace(row: pd.Series) -> pd.Series:
 
 def _get_stays_by_lat_long_dur(df_by_user: pd.DataFrame) -> np.ndarray:
     """
-    Groups together consecutive traces that have the same value for latitude, longitude, and duration.
+    Group consecutive traces that have the same values for latitude, longitude, and duration.
 
-    Args:
-        df_by_user (pd.DataFrame): Dataframe filtered by user.
+    Parameters
+    ----------
+    df_by_user : pd.DataFrame
+        DataFrame per user.
 
-    Returns:
-        np.ndarray: Array of stay group indices. shape: (n, )
+    Returns
+    -------
+    np.ndarray
+        Array of stay group indices.
     """
     lat = df_by_user['lat'].to_numpy()
     long = df_by_user['long'].to_numpy()
@@ -73,14 +89,19 @@ def _get_stays_by_lat_long_dur(df_by_user: pd.DataFrame) -> np.ndarray:
 
 def _get_duration_by_unique_stay(lat_lon: np.array, dur: np.array) -> dict:
     """
-    Computes the total duration for each unique latitude and longitude pair.
+    Compute the total duration for each unique latitude and longitude pair.
 
-    Args:
-        lat_lon (np.ndarray): Array of latitude and longitude pairs with shape (n,2)
-        dur (np.ndarray): Array of durations corresponding to each pair. (n,)
+    Parameters
+    ----------
+    lat_lon : np.ndarray
+        Array of latitude and longitude pairs with shape (n, 2).
+    dur : np.ndarray
+        Array of durations corresponding to each pair.
 
-    Returns:
-        dict: Dictionary mapping latitude/longitude pairs to total duration.
+    Returns
+    -------
+    dict
+        Dictionary mapping latitude/longitude pairs to total duration.
     """
     unique_lat_long = np.unique(lat_lon, axis=0)
     unique_lat_long = list(map(tuple, unique_lat_long))
@@ -100,16 +121,23 @@ def _get_duration_by_unique_stay(lat_lon: np.array, dur: np.array) -> dict:
 
 def _get_oscillating_traces(lat_lon: np.array, dur: np.array, timestamp_list: np.array, time_window: float) -> list:
     """
-    Identifies oscillating traces within a given time window.
+    Identify oscillating traces within a given time window.
 
-    Args:
-        lat_lon (np.ndarray): Array of latitude and longitude pairs. (n,2)
-        dur (np.ndarray): Array of durations corresponding to each pair. (n,)
-        timestamp_list (np.ndarray): Array of timestamps corresponding to each pair. (n,)
-        time_window (float): Time window for identifying oscillations. (n,)
+    Parameters
+    ----------
+    lat_lon : np.ndarray
+        Array of latitude and longitude pairs with shape (n, 2).
+    dur : np.ndarray
+        Array of durations corresponding to each pair.
+    timestamp_list : np.ndarray
+        Array of timestamps corresponding to each pair.
+    time_window : float
+        Time window for identifying oscillations.
 
-    Returns:
-        list: List of lists containing indices of oscillating traces.
+    Returns
+    -------
+    list
+        List of lists containing indices of oscillating traces.
     """
     oscillating_traces = []
 
@@ -144,17 +172,24 @@ def _get_replacement_for_traces(lat_lon: np.array,
                                 stay_indicator: np.array, oscillating_traces: list,
                                 duration_by_unique_stay_dict: dict) -> np.array:
     """
-        Determines replacement indices for oscillating traces based on stay indicators and duration.
+     Determine replacement indices for oscillating traces based on stay indicators and duration.
 
-        Args:
-            lat_lon (np.ndarray): Array of latitude and longitude pairs with shape (n, 2).
-            stay_indicator (np.ndarray): Array of stay indicators with shape (n,).
-            oscillating_traces (list): List of lists containing indices of oscillating traces.
-            duration_by_unique_stay_dict (dict): Dictionary mapping latitude/longitude pairs to total duration.
+     Parameters
+     ----------
+     lat_lon : np.ndarray
+         Array of latitude and longitude pairs with shape (n, 2).
+     stay_indicator : np.ndarray
+         Array of stay indicators with shape (n,).
+     oscillating_traces : list
+         List of lists containing indices of oscillating traces.
+     duration_by_unique_stay_dict : dict
+         Dictionary mapping latitude/longitude pairs to total duration.
 
-        Returns:
-            np.ndarray: Array of replacement indices with shape (n,).
-    """
+     Returns
+     -------
+     np.ndarray
+         Array of replacement indices with shape (n,).
+     """
 
     replacement_for_traces = np.full(len(lat_lon), -1)  # Dictionary to capture oscillation
     for trace_list in oscillating_traces:
@@ -172,14 +207,19 @@ def _get_replacement_for_traces(lat_lon: np.array,
 
 def _run_for_user(df_by_user: pd.DataFrame, time_window: float) -> pd.DataFrame:
     """
-    Processes the dataframe for a single user to address oscillations in traces.
+    Process the DataFrame for a single user to address oscillations in traces.
 
-    Args:
-        df_by_user (pd.DataFrame): Dataframe filtered by user.
-        time_window (float): Time window for identifying oscillations.
+    Parameters
+    ----------
+    df_by_user : pd.DataFrame
+        DataFrame filtered by user.
+    time_window : float
+        Time window for identifying oscillations.
 
-    Returns:
-        pd.DataFrame: Processed dataframe with address oscillations.
+    Returns
+    -------
+    pd.DataFrame
+        Processed DataFrame after accounting for trace oscillations.
     """
     # Sort dataframe by start time
     df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
@@ -229,14 +269,19 @@ def _run_for_user(df_by_user: pd.DataFrame, time_window: float) -> pd.DataFrame:
 
 def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
     """
-    Wrapper function to process the dataframe for a single user with given arguments.
+    Wrapper function to process the DataFrame for a single user with given arguments.
 
-    Args:
-        df_by_user (pd.DataFrame): Dataframe filtered by user.
-        args (tuple): Additional arguments for processing.
+    Parameters
+    ----------
+    df_by_user_chunk : pd.DataFrame
+        DataFrame filtered by user.
+    args : tuple
+        Tuple contains dur_constraint)
 
-    Returns:
-        pd.DataFrame: Processed dataframe.
+    Returns
+    -------
+    pd.DataFrame
+        Processed DataFrame.
     """
     dur_constraint = args[0]
     df_by_user_chunk = df_by_user_chunk.groupby(USER_ID).apply(lambda x: _run_for_user(x, dur_constraint))
@@ -246,18 +291,24 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
 def address_oscillation(output_file: str, dur_constraint: float, input_df: pd.DataFrame | None = None,
                         input_file: str = None) -> pd.DataFrame:
     """
-       Main function to address oscillations in GPS traces for all users.
-       Processes the input dataframe or file, applies the transformation, and saves the result.
+    Address fluctuation/oscillations in traces data for all users and save the result to a file.
 
-       Args:
-           output_file (str): Path to the output file.
-           dur_constraint (float): Duration constraint for identifying oscillations.
-           input_df (pd.DataFrame, optional): Input dataframe. Defaults to None.
-           input_file (str, optional): Path to the input file. Defaults to None.
+    Parameters
+    ----------
+    output_file : str
+        Path to the output file.
+    dur_constraint : float
+        Duration constraint for identifying oscillations.
+    input_df : pd.DataFrame, optional
+        Input DataFrame, by default None.
+    input_file : str, optional
+        Path to the input file, by default None.
 
-       Returns:
-           pd.DataFrame: Processed dataframe with addressed oscillations.
-       """
+    Returns
+    -------
+    pd.DataFrame
+        Processed DataFrame with addressed oscillations.
+    """
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
 

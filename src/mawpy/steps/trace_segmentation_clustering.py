@@ -3,7 +3,17 @@
 Trace Segmentation Clustering
 =============================
 
-TODO: Add description and pseudocode
+Segment GPS/Cellular traces of a user into stays based on spatial and temporal constraints.
+It identifies group of traces within a particular spatial threshold for which the user have stayed at for more than
+duration threshold (temporal constraint)
+
+input:
+    gps stay information / cellular stay information
+    spatial threshold
+    duration constraint threshold (for detect common stay)
+output:
+    potential stays represented by stay locations
+
 """
 import logging
 
@@ -29,10 +39,30 @@ def _get_diameter_constraint_exceed_index(starting_index: int, point_to_check: i
                                           latitudes_list: list[float], longitudes_list: list[float],
                                           spatial_constraint: float) -> tuple:
     """
-        Starting from the 'starting_index', find the first index position for which distance between
-        point 'i' and the point at index 'point_to_check' is more than the spatial constraint.
+       Find the first index where the distance between a point and a reference point exceeds a spatial constraint.
 
-        If no such points are found between [starting_index, point_to_check) then return -1
+       Starting from the 'starting_index', this function checks the distance between each point in the range
+       [starting_index, point_to_check) and the point at 'point_to_check'. It returns the index of the first
+       point where this distance exceeds the spatial constraint.
+
+       Parameters
+       ----------
+       starting_index : int
+           The starting index from which to begin the search.
+       point_to_check : int
+           The index of the reference point for distance comparison.
+       latitudes_list : list of float
+           List of latitudes for the points.
+       longitudes_list : list of float
+           List of longitudes for the points.
+       spatial_constraint : float
+           The spatial constraint distance threshold.
+
+       Returns
+       -------
+       tuple
+           A tuple containing a boolean indicating whether a point exceeding the spatial constraint was found,
+           and the index of the point if found, otherwise -1.
     """
 
     # Map to store distance values to avoid re-computation for duplicate points
@@ -54,19 +84,51 @@ def _get_diameter_constraint_exceed_index(starting_index: int, point_to_check: i
 def _does_duration_threshold_exceed(point_i: int, point_j: int, timestamps_list: list, duration_constraint: float) \
         -> bool:
     """
-        Checks if the observed time difference between point j and point i is greater than duration_constraint.
+    Check if the duration between two points exceeds a specified threshold.
+
+    This function compares the timestamps of two points and determines if the time difference between them
+    exceeds the given duration constraint.
+
+    Parameters
+    ----------
+    point_i : int
+        The index of the first point.
+    point_j : int
+        The index of the second point.
+    timestamps_list : list
+        List of timestamps corresponding to the points.
+    duration_constraint : float
+        The duration threshold.
+
+    Returns
+    -------
+    bool
+        True if the duration exceeds the threshold, False otherwise.
     """
     return timestamps_list[point_j] - timestamps_list[point_i] >= duration_constraint
 
 
 def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur_constraint: float) -> pd.DataFrame:
     """
-        For the trace of a user on a given day, the function calculates and assigns stay_lat and stay_long
-        to each of the daily trace.
+    Identify and group traces into stays for a user on a given day.
 
-        It groups together traces into a 'stay' for which time difference between
-            all the calculated diameter is within the spatial constraint and
-            the first and the last point exceeds duration_threshold
+    This function analyzes the trace of a user for a specific day and groups consecutive points into 'stays'
+    based on the spatial and duration constraints. It assigns the stay's latitude, longitude, and duration
+    to each trace.
+
+    Parameters
+    ----------
+    each_day_df : pd.DataFrame
+        DataFrame containing the user's trace for a single day.
+    spatial_constraint : float
+        The spatial constraint for grouping traces into stays.
+    dur_constraint : float
+        The minimum duration required for a group of traces to be considered a stay.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with added columns for stay latitude, stay longitude, and stay duration.
     """
     latitudes_for_day = each_day_df[ORIG_LAT].to_numpy()
     longitudes_for_day = each_day_df[ORIG_LONG].to_numpy()
@@ -116,6 +178,27 @@ def _get_df_with_stays(each_day_df: pd.DataFrame, spatial_constraint: float, dur
 
 
 def _run_for_user(df_by_user: pd.DataFrame, spatial_constraint: float, dur_constraint: float) -> pd.DataFrame:
+    """
+    Process trace data for a single user to identify stays.
+
+    This function groups trace data by day and applies stay detection logic to each group based on spatial and
+    duration constraints. It then combines stays across days.
+
+    Parameters
+    ----------
+    df_by_user : pd.DataFrame
+        DataFrame containing trace data for a single user.
+    spatial_constraint : float
+        The spatial constraint for grouping traces into stays.
+    dur_constraint : float
+        The minimum duration required for a group of traces to be considered a stay.
+
+    Returns
+    -------
+    pd.DataFrame
+        The processed DataFrame with identified stays and combined stay information.
+    """
+
     df_with_stay = df_by_user.groupby(UNIX_START_DATE).apply(
         lambda x: _get_df_with_stays(x, spatial_constraint, dur_constraint))
     df_with_stay[STAY] = get_stay_groups(df_with_stay)
@@ -126,6 +209,24 @@ def _run_for_user(df_by_user: pd.DataFrame, spatial_constraint: float, dur_const
 
 
 def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
+    """
+    Process a chunk of user trace data for stay detection.
+
+    This function applies the stay detection process to a chunk of trace data for multiple users,
+    grouped by user ID.
+
+    Parameters
+    ----------
+    df_by_user_chunk : pd.DataFrame
+        A chunk of the DataFrame containing trace data for multiple users.
+    args : tuple
+        A tuple containing the spatial and duration constraints.
+
+    Returns
+    -------
+    pd.DataFrame
+        The processed DataFrame with identified stays for each user in the chunk.
+    """
     spatial_constraint, dur_constraint = args
     df_by_user_chunk = (df_by_user_chunk.groupby(USER_ID)
                         .apply(lambda x: _run_for_user(x, spatial_constraint, dur_constraint)))
@@ -134,25 +235,29 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
 
 def trace_segmentation_clustering(output_file: str, spatial_constraint: float, dur_constraint: float,
                                   input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
-    """_summary_
+    """
+    Perform trace segmentation clustering based on spatial and duration constraints.
+
+    This function processes user trace data to identify and cluster stays based on spatial and duration
+    constraints. The resulting DataFrame is saved to a specified output file.
 
     Parameters
     ----------
     output_file : str
-        _description_
+        The path to the output file where the results will be saved.
     spatial_constraint : float
-        _description_
+        The spatial constraint for grouping traces into stays.
     dur_constraint : float
-        _description_
-    input_df : pd.DataFrame | None, optional
-        _description_, by default None
+        The minimum duration required for a group of traces to be considered a stay.
+    input_df : pd.DataFrame, optional
+        The input DataFrame containing trace data, by default None.
     input_file : str, optional
-        _description_, by default None
+        The path to the input file containing trace data, by default None.
 
     Returns
     -------
     pd.DataFrame | None
-        _description_
+        The processed DataFrame with identified stays, or None if input data is not provided.
     """
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
