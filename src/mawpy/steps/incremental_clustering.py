@@ -304,7 +304,7 @@ def _run_for_user(df_by_user: pd.DataFrame, df_columns: list,
     pd.DataFrame
         The DataFrame with updated clustering information for the user.
     """
-    df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
+    # df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
     # cluster original locations (orig_lat and orgi_long) to obtain stays.
     orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]

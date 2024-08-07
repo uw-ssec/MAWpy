@@ -198,7 +198,7 @@ def _run_for_user(df_by_user: pd.DataFrame, spatial_constraint: float, dur_const
     pd.DataFrame
         The processed DataFrame with identified stays and combined stay information.
     """
-
+    df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
     df_with_stay = df_by_user.groupby(UNIX_START_DATE).apply(
         lambda x: _get_df_with_stays(x, spatial_constraint, dur_constraint))
     df_with_stay[STAY] = get_stay_groups(df_with_stay)
