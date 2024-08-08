@@ -4,9 +4,9 @@ ic_usd_ao_usd
 
 Steps:
 
-- `Incremental Clustering <../steps/incremental_clustering.rst>`_
-- `Update Stay Duration <../steps/update_stay_duration.rst>`_
-- `Address Oscillation <../steps/address_oscillation.rst>`_
+- :doc:`Incremental Clustering <../steps/incremental_clustering>`
+- :doc:`Update Stay Duration <../steps/update_stay_duration>`
+- :doc:`Address Oscillation <../steps/address_oscillation>`
 - Update Stay Duration
 
 Use the following command to run the script:
