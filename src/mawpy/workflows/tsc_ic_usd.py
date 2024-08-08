@@ -87,6 +87,8 @@ def main():
 
     ```bash
     python3 tsc_ic_usd.py <input csv file path> <output file path> --spatial_constraint_1=1 --spatial_constraint_2=1 --duration_constraint_1=600 --duration_constraint_2=300 --duration_constraint_3=600
+    ```
+
     """
     args = parser.parse_args()
     st = datetime.datetime.now()

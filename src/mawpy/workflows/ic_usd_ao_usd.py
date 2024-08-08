@@ -89,6 +89,8 @@ def main():
 
     ```bash
     python3 ic_usd_ao_usd.py <input csv file path> <output file path> --spatial_constraint=1 --duration_constraint_1=0
+    ```
+
     """
     args = parser.parse_args()
     st = datetime.datetime.now()
