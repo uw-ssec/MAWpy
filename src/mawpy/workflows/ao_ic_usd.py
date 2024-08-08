@@ -40,7 +40,7 @@ def ao_ic_usd(
     return df_output_final
 
 
-if __name__ == "__main__":
+def main():
     """
     Perform address oscillation, incremental clustering, and update stay duration on user data.
 
@@ -89,3 +89,7 @@ if __name__ == "__main__":
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
     os.rename(AO_IC_USD_WIP_FILE_NAME, args.output_file)
+
+
+if __name__ == "__main__":
+    main()

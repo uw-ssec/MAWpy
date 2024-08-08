@@ -38,3 +38,10 @@ dev = [
 docs = [
     "jupyter-book",
 ]
+
+[project.scripts]
+ic_usd = "mawpy.workflows.ic_usd:main"
+tsc_usd = "mawpy.workflows.tsc_usd:main"
+tsc_ic_usd = "mawpy.workflows.tsc_ic_usd:main"
+ao_ic_usd = "mawpy.workflows.ao_ic_usd:main"
+ic_usd_ao_usd = "mawpy.workflows.ic_usd_ao_usd:main"

@@ -44,7 +44,7 @@ def tsc_ic_usd(
     return df_output_final
 
 
-if __name__ == "__main__":
+def main():
     """
     Perform trace segmentation clustering, incremental clustering, and update stay duration on user data.
 
@@ -95,3 +95,7 @@ if __name__ == "__main__":
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
     os.rename(TSC_IC_USD_WIP_FILE_NAME, args.output_file)
+
+
+if __name__ == "__main__":
+    main()
