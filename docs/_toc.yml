@@ -18,3 +18,10 @@ parts:
               - file: references/steps/update_stay_duration
               - file: references/steps/trace_segmentation_clustering
               - file: references/steps/address_oscillation
+          - file: references/workflows/index
+            sections:
+              - file: references/workflows/ic_usd
+              - file: references/workflows/tsc_usd
+              - file: references/workflows/ao_ic_usd
+              - file: references/workflows/tsc_ic_usd
+              - file: references/workflows/ic_usd_ao_usd

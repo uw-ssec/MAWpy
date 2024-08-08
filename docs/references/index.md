@@ -2,4 +2,5 @@
 
 Public API for users.
 
-[Workflow Steps](./steps/index.md)
+- [Workflow Steps](./steps/index.md)
+- [Worlfows](./workflows/index.md)
