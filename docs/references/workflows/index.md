@@ -1,4 +1,4 @@
-# Mawpy Workflows
+# Mawpy workflows
 
 This module contains the workflows (composed of workflow steps) that can be used
 to process the data.

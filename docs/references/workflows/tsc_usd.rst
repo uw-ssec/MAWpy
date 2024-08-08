@@ -4,8 +4,8 @@ tsc_usd
 
 Steps:
 
-- Trace Segmentation Clustering
-- Update Stay Duration
+- `Trace Segmentation Clustering <../steps/trace_segmentation_clustering.rst>`_
+- `Update Stay Duration <../steps/update_stay_duration.rst>`_
 
 Use the following command to run the script:
 

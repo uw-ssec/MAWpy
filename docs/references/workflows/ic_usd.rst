@@ -4,8 +4,8 @@ ic_usd
 
 Steps:
 
-- Incremental Clustering
-- Update Stay Duration
+- `Incremental Clustering <../steps/incremental_clustering.rst>`_
+- `Update Stay Duration <../steps/update_stay_duration.rst>`_
 
 Use the following command to run the script:
 

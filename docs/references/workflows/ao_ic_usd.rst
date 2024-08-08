@@ -4,9 +4,9 @@ ao_ic_usd
 
 Steps:
 
-Address Oscillation
-Incremental Clustering
-Update Stay Duration
+- `Address Oscillation <../steps/address_oscillation.rst>`_
+- `Incremental Clustering <../steps/incremental_clustering.rst>`_
+- `Update Stay Duration <../steps/update_stay_duration.rst>`_
 
 Use the following command to run the script:
 

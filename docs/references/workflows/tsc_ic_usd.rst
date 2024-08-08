@@ -4,9 +4,9 @@ tsc_ic_usd
 
 Steps:
 
-- Trace Segmentation Clustering
-- Incremental Clustering
-- Update Stay Duration
+- `Trace Segmentation Clustering <../steps/trace_segmentation_clustering.rst>`_
+- `Incremental Clustering <../steps/incremental_clustering.rst>`_
+- `Update Stay Duration <../steps/update_stay_duration.rst>`_
 
 Use the following command to run the script:
 
