@@ -45,6 +45,51 @@ def ic_usd_ao_usd(
 
 
 if __name__ == "__main__":
+    """
+    Perform a series of geospatial operations on user data, including clustering, stay duration updates,
+    and oscillation correction.
+
+    This script processes  trace data to detect and refine potential stays, applying a series of steps:
+    1. **Incremental Clustering**: Groups locations based on a spatial threshold.
+    2. **Update Stay Duration**: Recalculates the duration of detected stays.
+    3. **Address Oscillation**: Corrects oscillating traces that may indicate repeated movement between two points.
+    4. **Final Update Stay Duration**: Applies a final duration update after oscillation correction.
+
+    The results are saved to a specified output file.
+
+    Parameters
+    ----------
+    input_file : str
+        Path to the input CSV file containing the trace data.
+    output_file : str
+        Path to the output CSV file where the processed data will be saved.
+    spatial_constraint : float
+        The spatial threshold used for clustering locations to detect stays. Default is 1.0.
+    duration_constraint1 : float
+        The minimum duration required for the first stay detection step. Default is 0.
+    duration_constraint2 : float
+        The minimum duration constraint for the first stay duration update. Default is 300.
+    duration_constraint3 : float
+        The minimum duration constraint for addressing oscillations. Default is 300.
+    duration_constraint4 : float
+        The minimum duration constraint for the final stay duration update. Default is 300.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with the processed data, including refined stay durations and corrected oscillations.
+
+    Notes
+    -----
+    The script can be executed from the command line with the required arguments.
+
+    Example
+    -------
+    To run the script with custom parameters: (Make sure your python executable points to the right working directory)
+
+    ```bash
+    python3 ic_usd_ao_usd.py <input csv file path> <output file path> --spatial_constraint=1 --duration_constraint_1=0
+    """
     args = parser.parse_args()
     st = datetime.datetime.now()
     ic_usd_ao_usd(args.input_file, IC_USD_AO_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,

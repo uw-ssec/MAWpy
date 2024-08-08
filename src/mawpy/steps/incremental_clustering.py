@@ -4,16 +4,16 @@ Incremental Clustering
 ======================
 
 Perform clustering on multiple locations of one user based on a spatial threshold
-Each cluster of locations represents a potential stay
+Each cluster of locations represents a potential stay. This method identifies groups of spatially close points
+that are likely to represent the physical location where the user stayed for more than duration_threshold.
 
 input:
-    gps stay information / celluar stay information
+    gps stay information / cellular stay information
     spatial threshold
-    duration constraint threshold (for detect common stay)
+    duration constraint threshold (for detecting common stay)
 output:
-    potential stays represented by clusters of locations
+    potential stays represented by stay locations
 
-TODO: Add pseudocode
 """
 import logging
 
@@ -40,7 +40,23 @@ logger = logging.getLogger(__name__)
 
 def _get_cluster_center(row: pd.Series, df_columns: list, mapping: dict, dur_constr: float) -> tuple[str, str, str]:
     """
-    Returns the lat and long of the cluster to which the trace(row) belongs.
+    Returns the latitude, longitude, and uncertainty of the cluster to which the given trace belongs.
+
+    Parameters
+    ----------
+    row : pd.Series
+        A row from the DataFrame containing trace information.
+    df_columns : list
+        A list of columns in the DataFrame.
+    mapping : dict
+        A dictionary mapping location coordinates to their corresponding cluster center and radius.
+    dur_constr : float
+        The duration constraint for determining the cluster center.
+
+    Returns
+    -------
+    tuple[str, str, str]
+        The latitude, longitude, and uncertainty of the cluster center.
     """
     if dur_constr:
         lat_long = (row[STAY_LAT], row[STAY_LONG])
@@ -63,7 +79,17 @@ def _get_cluster_center(row: pd.Series, df_columns: list, mapping: dict, dur_con
 
 def _k_means_cluster_lloyd(cluster_list: list[Cluster]) -> list[Cluster]:
     """
-    Lloyd's Algorithm for K-Means Clustering
+    Performs K-Means clustering using Lloyd's algorithm on a list of clusters.
+
+    Parameters
+    ----------
+    cluster_list : list[Cluster]
+        A list of Cluster objects to be clustered.
+
+    Returns
+    -------
+    list[Cluster]
+        A list of new Cluster objects after applying K-Means clustering.
     """
     uniq_month_gps_list = []
     for each_cluster in cluster_list:
@@ -132,7 +158,19 @@ def _k_means_cluster_lloyd(cluster_list: list[Cluster]) -> list[Cluster]:
 
 def _get_clusters(locations_for_clustering: list[tuple[float, float]], spat_constr: float) -> list[Cluster]:
     """
-        Get list of clusters from trace locations based on the spatial constraint.
+    Clusters trace locations based on a spatial constraint.
+
+    Parameters
+    ----------
+    locations_for_clustering : list[tuple[float, float]]
+        A list of tuples containing the latitude and longitude coordinates for clustering.
+    spat_constr : float
+        The spatial constraint for clustering.
+
+    Returns
+    -------
+    list[Cluster]
+        A list of Cluster objects created based on the spatial constraint.
     """
     clusters_list = []
 
@@ -183,7 +221,17 @@ To Do: Figure out the data structure used to perform all actions.
 # if a duration constraint is provided, then get loc4cluster as latitude and longitude coordinates
 def _get_locations_to_cluster_center_map(clusters_list: list[Cluster]) -> dict:
     """
-        Getting a mapping for each point in the cluster to the cluster center and cluster radius.
+    Creates a mapping from each point in the cluster to the cluster center and cluster radius.
+
+    Parameters
+    ----------
+    clusters_list : list[Cluster]
+        A list of Cluster objects.
+
+    Returns
+    -------
+    dict
+        A dictionary mapping each point in the clusters to its corresponding cluster center and radius.
     """
     locations_to_cluster_center_map = {}
     for this_cluster in clusters_list:  # for each cluster in L
@@ -208,15 +256,17 @@ def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constrain
     This function calculates the duration of stays for each stay in the DataFrame,
     and filters out stays that do not meet the specified duration constraint.
 
-    Parameters:
-    - df_by_user: pd.DataFrame
-        The input DataFrame containing stay information.
-    - duration_constraint: int
+    Parameters
+    ----------
+    df_by_user : pd.DataFrame
+        The input DataFrame per user containing stay information.
+    duration_constraint : float
         The minimum duration required to keep a stay.
 
-    Returns:
-    - pd.DataFrame
-        The filtered DataFrame containing only the stays with stay durations greater than the duration constraint.
+    Returns
+    -------
+    pd.DataFrame
+        The filtered DataFrame containing only the stays with durations greater than the duration constraint.
     """
     # Calculate the minimum and maximum UNIX_START_T for each STAY group
     stay_duration = df_by_user.groupby(STAY)[UNIX_START_T].agg(['min', 'max'])
@@ -236,9 +286,25 @@ def _filter_by_durations_constraint(df_by_user: pd.DataFrame, duration_constrain
 def _run_for_user(df_by_user: pd.DataFrame, df_columns: list,
                   spat_constr: float, dur_constr: float | None = None) -> pd.DataFrame:
     """
-        Function to perform incremental clustering on a dataframe containing traces for a single user
+    Performs incremental clustering on a DataFrame containing traces for a single user.
+
+    Parameters
+    ----------
+    df_by_user : pd.DataFrame
+        A DataFrame containing trace data for a single user.
+    df_columns : list
+        A list of columns in the DataFrame.
+    spat_constr : float
+        The spatial constraint for clustering.
+    dur_constr : float | None, optional
+        The duration constraint for clustering, by default None.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with updated clustering information for the user.
     """
-    df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
+    # df_by_user = df_by_user.sort_values(by=[UNIX_START_T], ascending=True)
 
     # cluster original locations (orig_lat and orgi_long) to obtain stays.
     orig_lat_long_df = df_by_user[[ORIG_LAT, ORIG_LONG]]
@@ -274,6 +340,21 @@ def _run_for_user(df_by_user: pd.DataFrame, df_columns: list,
 
 
 def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
+    """
+    Helper function to run the clustering process on a chunk of user data.
+
+    Parameters
+    ----------
+    df_by_user_chunk : pd.DataFrame
+        Input DataFrame per userid chunk.
+    args : tuple
+        A tuple containing the spatial and duration constraints.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with clustering information for the chunk of user data.
+    """
     spatial_constraint, dur_constraint = args
 
     df_columns = df_by_user_chunk.columns
@@ -291,25 +372,26 @@ def _run(df_by_user_chunk: pd.DataFrame, args: tuple) -> pd.DataFrame:
 def incremental_clustering(output_file: str, spatial_constraint: float,
                            dur_constraint: float,
                            input_df: pd.DataFrame | None = None, input_file: str = None) -> pd.DataFrame | None:
-    """_summary_
+    """
+    Main function to perform incremental clustering on location data.
 
     Parameters
     ----------
     output_file : str
-        _description_
+        The file path to save the output DataFrame.
     spatial_constraint : float
-        _description_
+        The spatial constraint for clustering.
     dur_constraint : float
-        _description_
+        The duration constraint for clustering.
     input_df : pd.DataFrame | None, optional
-        _description_, by default None
+        The input DataFrame, by default None.
     input_file : str, optional
-        _description_, by default None
+        The file path to the input data, by default None.
 
     Returns
     -------
     pd.DataFrame | None
-        _description_
+        The output DataFrame after clustering, or None if input data is not provided.
     """
     if input_df is None and input_file is None:
         logger.error("At least one of input file path or input dataframe is required")
