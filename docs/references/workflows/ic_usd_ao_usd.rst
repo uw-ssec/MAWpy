@@ -7,7 +7,7 @@ Steps:
 - :doc:`Incremental Clustering <../steps/incremental_clustering>`
 - :doc:`Update Stay Duration <../steps/update_stay_duration>`
 - :doc:`Address Oscillation <../steps/address_oscillation>`
-- Update Stay Duration
+- :doc:`Update Stay Duration <../steps/update_stay_duration>`
 
 Use the following command to run the script:
 
