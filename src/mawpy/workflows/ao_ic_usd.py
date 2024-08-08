@@ -68,14 +68,6 @@ def ao_ic_usd(
     -----
     The script can be executed from the command line with the required arguments.
 
-    Example
-    -------
-    To run the script with custom parameters: (Make sure your python executable points to the right working directory)
-
-    ```bash
-    python3 ao_ic_usd.py <input csv file path> <output file path> --spatial_constraint=1 --duration_constraint_1=100 --duration_constraint_2=300 --duration_constraint_3=300
-    ```
-
     """
     df_output_ao = address_oscillation(output_file, duration_constraint1, input_file=input_file)
     df_output_ic = incremental_clustering(output_file, spatial_constraint, duration_constraint2, input_df=df_output_ao)
