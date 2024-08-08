@@ -37,14 +37,6 @@ def tsc_ic_usd(
     duration_constraint2: float,
     duration_constraint3: float
 ) -> pd.DataFrame:
-    df_output_tsc = trace_segmentation_clustering(output_file, spatial_constraint1, duration_constraint1,
-                                                  input_file=input_file)
-    df_output_ic = incremental_clustering(output_file, spatial_constraint2, duration_constraint2, input_df=df_output_tsc)
-    df_output_final = update_stay_duration(output_file, duration_constraint3, input_df=df_output_ic)
-    return df_output_final
-
-
-if __name__ == "__main__":
     """
     Perform trace segmentation clustering, incremental clustering, and update stay duration on user data.
 
@@ -81,13 +73,15 @@ if __name__ == "__main__":
     -----
     The script can be executed from the command line with the required arguments.
 
-    Example
-    -------
-    To run the script with custom parameters: (Make sure your python executable points to the right working directory)
-
-    ```bash
-    python3 tsc_ic_usd.py <input csv file path> <output file path> --spatial_constraint_1=1 --spatial_constraint_2=1 --duration_constraint_1=600 --duration_constraint_2=300 --duration_constraint_3=600
     """
+    df_output_tsc = trace_segmentation_clustering(output_file, spatial_constraint1, duration_constraint1,
+                                                  input_file=input_file)
+    df_output_ic = incremental_clustering(output_file, spatial_constraint2, duration_constraint2, input_df=df_output_tsc)
+    df_output_final = update_stay_duration(output_file, duration_constraint3, input_df=df_output_ic)
+    return df_output_final
+
+
+def main():
     args = parser.parse_args()
     st = datetime.datetime.now()
     tsc_ic_usd(args.input_file, TSC_IC_USD_WIP_FILE_NAME, args.spatial_constraint_1, args.spatial_constraint_2,
@@ -95,3 +89,7 @@ if __name__ == "__main__":
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
     os.rename(TSC_IC_USD_WIP_FILE_NAME, args.output_file)
+
+
+if __name__ == "__main__":
+    main()

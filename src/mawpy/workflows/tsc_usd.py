@@ -32,13 +32,6 @@ def tsc_usd(
     duration_constraint1: float,
     duration_constraint2: float,
 ) -> pd.DataFrame:
-    df_output_tsc = trace_segmentation_clustering(output_file, spatial_constraint, duration_constraint1,
-                                              input_file=input_file)
-    df_output_final = update_stay_duration(output_file, duration_constraint2, input_df=df_output_tsc)
-    return df_output_final
-
-
-if __name__ == "__main__":
     """
     Perform trace segmentation clustering and update stay duration on user data.
 
@@ -66,17 +59,14 @@ if __name__ == "__main__":
     pd.DataFrame
         A DataFrame containing the processed traces data with updated stay durations.
 
-    Notes
-    -----
-    The script can be executed from the command line with the required arguments.
-
-    Example
-    -------
-    To run the script with custom parameters: (Make sure your python executable points to the right working directory)
-
-    ```bash
-    python3 tsc_usd.py <input csv file path> <output file path> --spatial_constraint=1 --duration_constraint_1=0 --duration_constraint_2=300
     """
+    df_output_tsc = trace_segmentation_clustering(output_file, spatial_constraint, duration_constraint1,
+                                              input_file=input_file)
+    df_output_final = update_stay_duration(output_file, duration_constraint2, input_df=df_output_tsc)
+    return df_output_final
+
+
+def main():
     args = parser.parse_args()
     st = datetime.datetime.now()
     tsc_usd(args.input_file, TSC_USD_WIP_FILE_NAME, args.spatial_constraint,
@@ -84,3 +74,7 @@ if __name__ == "__main__":
     en = datetime.datetime.now()
     logger.info(f"Total Time taken for execution: {en - st}")
     os.rename(TSC_USD_WIP_FILE_NAME, args.output_file)
+
+
+if __name__ == "__main__":
+    main()

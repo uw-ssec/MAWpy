@@ -40,7 +40,7 @@ pip install mawpy
 ## Read The Docs:
 
 Please follow the link below to find the further documentation for MAWpy:
-[mawpy.readthedocs.io/](mawpy.readthedocs.io/)
+[mawpy.readthedocs.io/](https://mawpy.readthedocs.io/)
 
 ## Developer Guide
 
