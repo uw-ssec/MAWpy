@@ -37,55 +37,12 @@ package along with its dependencies:
 pip install mawpy
 ```
 
-## Setting Up Your Development Environment
+## Read The Docs:
 
-### 1. Create and Activate a Virtual Environment
+Please follow the link below to find the further documentation for MAWpy:
+[mawpy.readthedocs.io/](mawpy.readthedocs.io/)
 
-Create and activate a virtual environment to manage project dependencies:
+## Developer Guide
 
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-```
-
-### 2. Install Project Dependencies
-
-Install the main project dependencies:
-
-```bash
-pip install .
-```
-
-## 3. Install Development Dependencies
-
-To set up your development environment, you need to install additional
-dependencies. These dependencies are necessary for running tests, linting, and
-other development tasks.
-
-Run the following command to install all development dependencies:
-
-```bash
-pip install ".[dev]"
-```
-
-## 4. Install Documentation Dependencies
-
-To build and view the documentation, you need to install the necessary
-dependencies. Follow these steps to set up the documentation environment:
-
-Install the documentation dependencies using `pip`. These dependencies are
-listed under the `[docs]` optional dependencies in `pyproject.toml`. Run the
-following command:
-
-```bash
-pip install ".[docs]"
-```
-
-## Running Tests
-
-To ensure your changes are properly tested, follow these steps: Execute the test
-suite using `pytest`:
-
-```bash
-pytest
-```
+To contribute to MAWpy as a developer, please follow the setup instructions at
+[CONTRIBUTING.md](.github/CONTRIBUTING.md)
