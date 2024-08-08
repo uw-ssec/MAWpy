@@ -12,6 +12,7 @@ Steps:
 Use the following command to run the script:
 
 .. code-block:: bash
+
     ic_usd_ao_usd <input_file_path> <outputfile_path> <optional_arguments>
 
-.. autofunction:: mawpy.workflows.ic_usd_ao_usd.main
+.. autofunction:: mawpy.workflows.ic_usd_ao_usd.ic_usd_ao_usd

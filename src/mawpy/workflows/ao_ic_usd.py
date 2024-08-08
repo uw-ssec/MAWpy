@@ -34,13 +34,6 @@ def ao_ic_usd(
     duration_constraint2: float,
     duration_constraint3: float
 ) -> pd.DataFrame:
-    df_output_ao = address_oscillation(output_file, duration_constraint1, input_file=input_file)
-    df_output_ic = incremental_clustering(output_file, spatial_constraint, duration_constraint2, input_df=df_output_ao)
-    df_output_final = update_stay_duration(output_file, duration_constraint3, input_df=df_output_ic)
-    return df_output_final
-
-
-def main():
     """
     Perform address oscillation, incremental clustering, and update stay duration on user data.
 
@@ -84,6 +77,13 @@ def main():
     ```
 
     """
+    df_output_ao = address_oscillation(output_file, duration_constraint1, input_file=input_file)
+    df_output_ic = incremental_clustering(output_file, spatial_constraint, duration_constraint2, input_df=df_output_ao)
+    df_output_final = update_stay_duration(output_file, duration_constraint3, input_df=df_output_ic)
+    return df_output_final
+
+
+def main():
     args = parser.parse_args()
     st = datetime.datetime.now()
     ao_ic_usd(args.input_file, AO_IC_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,

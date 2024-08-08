@@ -37,14 +37,6 @@ def ic_usd_ao_usd(
     duration_constraint3: float,
     duration_constraint4: float,
 ) -> pd.DataFrame:
-    df_output_ic = incremental_clustering(output_file, spatial_constraint, duration_constraint1, input_file=input_file)
-    df_output_usd = update_stay_duration(output_file, duration_constraint2, input_df=df_output_ic)
-    df_output_ao = address_oscillation(output_file, duration_constraint3, input_df=df_output_usd)
-    df_output_usd_final = update_stay_duration(output_file, duration_constraint4, input_df=df_output_ao)
-    return df_output_usd_final
-
-
-def main():
     """
     Perform a series of geospatial operations on user data, including clustering, stay duration updates,
     and oscillation correction.
@@ -92,6 +84,14 @@ def main():
     ```
 
     """
+    df_output_ic = incremental_clustering(output_file, spatial_constraint, duration_constraint1, input_file=input_file)
+    df_output_usd = update_stay_duration(output_file, duration_constraint2, input_df=df_output_ic)
+    df_output_ao = address_oscillation(output_file, duration_constraint3, input_df=df_output_usd)
+    df_output_usd_final = update_stay_duration(output_file, duration_constraint4, input_df=df_output_ao)
+    return df_output_usd_final
+
+
+def main():
     args = parser.parse_args()
     st = datetime.datetime.now()
     ic_usd_ao_usd(args.input_file, IC_USD_AO_USD_WIP_FILE_NAME, args.spatial_constraint, args.duration_constraint_1,
